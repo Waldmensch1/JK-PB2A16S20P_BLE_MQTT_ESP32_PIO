@@ -846,7 +846,7 @@ void readCellDataRecord()
     Serial.print("cellVoltage: ");
     Serial.println(fl_value);
     cellStr = String(fl_value, 3);
-    newTopic = String(mqttname + "/data/cell_voltage");
+    newTopic = String(mqttname + "/data/battery_voltage");
     client.publish(newTopic.c_str(), cellStr.c_str());
     battery_voltage = fl_value;
   }

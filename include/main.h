@@ -1,20 +1,25 @@
 #include <Arduino.h>
 #include "BLEDevice.h"
+#include <WiFi.h>
+#include <PubSubClient.h>
 #include "config.h"
 
-void MQTTCallback(char *topic, byte *payload, unsigned int length);
-static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
-bool connectToBLEServer();
 void analyze();
 boolean reconnect();
-
 void initWiFi();
 void readDeviceDataRecord();
 void readCellDataRecord();
 String toBinaryString(uint32_t value, int bits);
 
+// W-LAN Setting
+const char *ssid = SSID_NAME;
+const char *password = SSID_PASSWORD;
+WiFiClient espClient;
+
 // BMS-BLE Settings
 const char *Geraetename = DEVICENAME; // JK-B2A24S20P JK-B2A24S15P
+static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
+bool connectToBLEServer();
 
 // MQTT Setting
 const char *mqtt_server = MQTT_SERVER;                      // -> hier die IP des MQTT Server eingeben
@@ -23,16 +28,14 @@ const char *mqtt_username = MQTT_USERNAME;                  // -> hier MQTT Benu
 const char *mqtt_passwort = MQTT_PASSWORD;                  // -> hier MQTT Passwort eingeben
 String mqttname = String("jk_ble_listener/") + Geraetename; // -> hier wird der MQTT Gerätename festgelegt
 const int mqttpublishtime_offset = 1000;                    //-> hier einstellen wie oft Danten gesnedet werden sollen 1000 = jede Sekunde
-
-// W-LAN Setting
-const char *ssid = SSID_NAME;
-const char *password = SSID_PASSWORD;
-
-// MQTT
+bool mqtt_buffer_maxed = 0;
+long lastReconnectAttempt = 0;
 String willTopic = String("jk_ble_listener/") + String(Geraetename) + String("/status");
 String willMessage = "offline";
 byte willQoS = 0;
 boolean willRetain = true;
+void MQTTCallback(char *topic, byte *payload, unsigned int length);
+PubSubClient client(mqtt_server, mqtt_port, MQTTCallback, espClient);
 
 const byte CONFIGDATA = 0x01;
 const byte CELLDATA = 0x02;
@@ -66,8 +69,6 @@ bool received_start_frame = false;
 bool received_complete = false;
 bool new_data = false;
 byte BLE_Scan_counter = 0;
-
-bool mqtt_buffer_maxed = 0;
 
 static bool doConnect = false;
 static bool ble_connected = false;

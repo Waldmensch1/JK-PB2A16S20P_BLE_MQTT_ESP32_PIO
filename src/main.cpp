@@ -4,8 +4,9 @@
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
 #include "driver/gpio.h"
-#include "main.h"
 #include "arduino_base64.hpp"
+#include "main.h"
+
 
 void MQTTCallback(char *topic, byte *payload, unsigned int length)
 {
@@ -48,10 +49,8 @@ void MQTTCallback(char *topic, byte *payload, unsigned int length)
   }
 }
 
-// MQTT
-WiFiClient espClient;
-PubSubClient client(mqtt_server, mqtt_port, MQTTCallback, espClient);
-long lastReconnectAttempt = 0;
+
+
 
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify)
 {
@@ -132,7 +131,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
       frame++;
     }
 
-    if ((frame > 300))
+    if ((frame > 320))
     {
       Serial.println("Fehlerhafte Daten !!");
       frame = 0;
@@ -140,7 +139,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
       new_data = false;
     }
 
-    if (frame = 300)
+    if (frame >= 300)
     {
       Serial.println("New Data for Analyse Complete...");
       received_complete = true;

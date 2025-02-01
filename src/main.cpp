@@ -5,6 +5,7 @@
 #include <WiFiUdp.h>
 #include "driver/gpio.h"
 #include "main.h"
+#include "arduino_base64.hpp"
 
 void MQTTCallback(char *topic, byte *payload, unsigned int length)
 {
@@ -131,7 +132,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
       frame++;
     }
 
-    if ((frame > 320))
+    if ((frame > 300))
     {
       Serial.println("Fehlerhafte Daten !!");
       frame = 0;
@@ -139,7 +140,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
       new_data = false;
     }
 
-    if (frame >= 300)
+    if (frame = 300)
     {
       Serial.println("New Data for Analyse Complete...");
       received_complete = true;
@@ -158,16 +159,16 @@ class MyClientCallback : public BLEClientCallbacks
 
   void onConnect(BLEClient *pclient)
   {
-    client.publish((mqttname + "/ble_connection").c_str(), "connected");
+    client.publish((mqttname + "/status/ble_connection").c_str(), "connected");
   }
 
   void onDisconnect(BLEClient *pclient)
   {
     ble_connected = false;
     // pclient->disconnect();
-    client.publish((mqttname + "/ble_connection").c_str(), "disconnected");
+    client.publish((mqttname + "/status/ble_connection").c_str(), "disconnected");
     Serial.println("BLE-Disconnect");
-    client.publish((mqttname + "/ble_connection").c_str(), "Rebooting");
+    client.publish((mqttname + "/status/ble_connection").c_str(), "rebooting");
     Serial.println("BLE was Disconnected ... and no BLE reconnection possible, Reboot ESP...");
     ESP.restart();
   }
@@ -208,6 +209,10 @@ void setup()
 
   // WIFI Setup
   initWiFi();
+
+  // MQTT Setup
+  mqtt_buffer_maxed = client.setBufferSize(500);
+  Serial.println("mqtt_buffer_maxed: " + String(mqtt_buffer_maxed));
 
   // BLE Setup
   BLEDevice::init("");
@@ -271,7 +276,7 @@ void loop()
     if (!connectToBLEServer())
     {
       Serial.println("We have failed to connect to the server; there is nothin more we will do.");
-      client.publish((mqttname + "/ble_connection").c_str(), "BLE_Connection_error!");
+      client.publish((mqttname + "/status/ble_connection").c_str(), "BLE_Connection_error!");
       delay(500);
       ble_connected = false;
       doConnect = false;
@@ -293,8 +298,14 @@ void loop()
       if (mqttpublishtime == 0 || (millis() >= (mqttpublishtime + mqttpublishtime_offset)))
       {
         mqttpublishtime = millis();
-        client.publish((mqttname + "/ble_connection").c_str(), "connected");
-        client.publish((mqttname + "/status").c_str(), "online");
+
+        if (!sent_once)
+        {
+          client.publish((mqttname + "/status/ble_connection").c_str(), "connected");
+          client.publish((mqttname + "/status/status").c_str(), "online");
+          client.publish((mqttname + "/status/ipaddress").c_str(), WiFi.localIP().toString().c_str());
+          sent_once = true;
+        }
       }
     }
 
@@ -303,7 +314,6 @@ void loop()
     {
       sendingtime = 0;
       Serial.println("gesendet!");
-      // aktive_sending = false;
       pRemoteCharacteristic->writeValue(getInfo, 20);
     }
   }
@@ -313,10 +323,11 @@ void loop()
   {
 
     Serial.println("BLE -> Reconnecting!");
-    client.publish((mqttname + "/ble_connection").c_str(), "Reconnecting");
+    client.publish((mqttname + "/status/ble_connection").c_str(), "reconnecting");
     bleScantime = millis();
     pBLEScan->start(5, false);
     BLE_Scan_counter++;
+    sent_once = false;
   }
 
   // BLE verbidnugn ist da aber es kommen seit X Sekunden keine neuen Daten !
@@ -324,16 +335,17 @@ void loop()
   {
     ble_connected = false;
     delay(200);
-    client.publish((mqttname + "/ble_connection").c_str(), "terminated");
+    client.publish((mqttname + "/status/ble_connection").c_str(), "terminated");
     Serial.println("BLE-Disconnect/terminated");
     newdatalasttime = millis();
     pClient->disconnect();
+    sent_once = false;
   }
 
   // checker das nach max 5 Minuten und keiner BLE Verbidung neu gestartet wird...
   if (BLE_Scan_counter > 20)
   {
-    client.publish((mqttname + "/ble_connection").c_str(), "Rebooting");
+    client.publish((mqttname + "/status/ble_connection").c_str(), "rebooting");
     Serial.println("BLE isn´t receiving new Data form BMS... and no BLE reconnection possible, Reboot ESP...");
     ESP.restart();
   }
@@ -401,7 +413,7 @@ bool connectToBLEServer()
   ble_connected = true;
   doConnect = false;
   Serial.println("We are now connected to the BLE Server.");
-  client.publish((mqttname + "/ble_connection").c_str(), "connected");
+  client.publish((mqttname + "/status/ble_connection").c_str(), "connected");
   return true;
 }
 
@@ -429,12 +441,12 @@ boolean reconnect()
     // Once connected, publish an announcement...
     if (millis() < 10000)
     {
-      client.publish((mqttname + "/ble_connection").c_str(), "Startup");
+      client.publish((mqttname + "/status/ble_connection").c_str(), "Startup");
     }
 
     client.subscribe((mqttname + "/parameter/debugging_active").c_str());
     client.subscribe((mqttname + "/parameter/debugging_active_full").c_str()); // debug_flg_full_log
-    client.publish((mqttname + "/status").c_str(), "online");
+    client.publish((mqttname + "/status/status").c_str(), "online");
     if (debug_flg)
     {
       Serial.println("MQTT reconnected!");
@@ -688,12 +700,38 @@ void readCellDataRecord()
 {
   size_t index = 5; // Skip the first 5 bytes
   uint8_t counter = receivedBytes_cell[index++];
+  if (counter == counter_last)
+    return;
+  else
+    counter_last = counter;
+
   Serial.print("counter: ");
   Serial.println(counter);
 
-  String newTopic = String(mqttname + "/data/readcount");
-  String cellStr = String(counter);
+  String newTopic;
+  String cellStr;
+
+  newTopic = String(mqttname + "/data/readcount");
+  cellStr = String(counter);
   client.publish(newTopic.c_str(), cellStr.c_str());
+
+  if (debug_flg_full_log)
+  {
+    uint16_t inputLength = sizeof(receivedBytes_cell);
+    char output[base64::encodeLength(inputLength)];
+    base64::encode(receivedBytes_cell, inputLength, output);
+    newTopic = String(mqttname + "/debug/rawdata");
+    cellStr = String(output);
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    client.publish((mqttname + "/debug/enabled").c_str(), "true");
+  }
+  else
+  {
+    newTopic = String(mqttname + "/debug/rawdata");
+    cellStr = "not published";
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    client.publish((mqttname + "/debug/enabled").c_str(), "false");
+  }
 
   // Read cell voltages
   float volts[30];
@@ -907,7 +945,7 @@ void readCellDataRecord()
   }
 
   fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
-  if (fl_value != balance_current || balance_current == 0)
+  if (fl_value != balance_current || balance_current == 10000)
   {
     Serial.print("balanceCurrent: ");
     Serial.println(fl_value);

@@ -39,7 +39,7 @@ const byte CELLDATA = 0x02;
 const byte DEVICEDATA = 0x03;
 byte actualdata = 0x00;
 
-bool debug_flg = true;
+bool debug_flg = false;
 bool debug_flg_full_log = false;
 
 static BLEUUID serviceUUID("ffe0"); // The remote service we wish to connect to.
@@ -52,10 +52,10 @@ byte getInfo[20] = {0xaa, 0x55, 0x90, 0xeb, 0x96, 0x00, 0x79, 0x62, 0x96, 0xed, 
 unsigned long sendingtime = 0;
 unsigned long bleScantime = 0;
 unsigned long mqttpublishtime = 0;
-unsigned long canpublishtime = 0;
 unsigned long newdatalasttime = 0;
 unsigned long ble_connection_time = 0;
 bool blocked_for_parsing = false;
+bool sent_once = false;
 
 byte receivedBytes_cell[320];
 byte receivedBytes_device[320];
@@ -67,11 +67,14 @@ bool received_complete = false;
 bool new_data = false;
 byte BLE_Scan_counter = 0;
 
+bool mqtt_buffer_maxed = 0;
+
 static bool doConnect = false;
 static bool ble_connected = false;
 static BLERemoteCharacteristic *pRemoteCharacteristic;
 static BLEAdvertisedDevice *myDevice;
 
+uint8_t counter_last = 0;
 uint32_t cells_used = 0;
 float volts_old[30] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 float cell_avg_voltage = 0;
@@ -88,7 +91,7 @@ float temp_sensor3 = 0;
 float temp_sensor4 = 0;
 float temp_sensor5 = 0;
 int16_t errors_mask = 255;
-float balance_current = 0;
+float balance_current = 10000;
 byte balancing_action = 255;
 uint8_t battery_soc = 0;
 float capacity_remaining = 0;

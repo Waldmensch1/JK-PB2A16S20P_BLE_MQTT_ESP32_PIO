@@ -7,7 +7,6 @@
 #include "arduino_base64.hpp"
 #include "main.h"
 
-
 void MQTTCallback(char *topic, byte *payload, unsigned int length)
 {
   String Command = "";
@@ -48,9 +47,6 @@ void MQTTCallback(char *topic, byte *payload, unsigned int length)
     }
   }
 }
-
-
-
 
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify)
 {
@@ -807,10 +803,30 @@ void readCellDataRecord()
     cell_diff_voltage = fl_value;
   }
 
-  // Read balance current
-  fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
-  Serial.print("???: ");
-  Serial.println(fl_value);
+  // high_voltage_cell
+  byte byte_value = receivedBytes_cell[index++];
+  if (byte_value != high_voltage_cell || high_voltage_cell == 255)
+  {
+
+    Serial.print("Cell with highest voltage: ");
+    Serial.println(byte_value);
+    cellStr = String(byte_value);
+    newTopic = String(mqttname + "/data/high_voltage_cell");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    high_voltage_cell = byte_value;
+  }
+
+  // low_voltage_cell
+  byte_value = receivedBytes_cell[index++];
+  if (byte_value != low_voltage_cell || low_voltage_cell == 255)
+  {
+    Serial.print("Cell with lowest voltage: ");
+    Serial.println(byte_value);
+    cellStr = String(byte_value);
+    newTopic = String(mqttname + "/data/low_voltage_cell");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    low_voltage_cell = byte_value;
+  }
 
   // Read cell resistances
   float cellResistance[30];
@@ -932,15 +948,15 @@ void readCellDataRecord()
     temp_sensor2 = fl_value;
   }
 
-  int16_t int16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
-  if (int16_t_value != errors_mask || errors_mask == 255)
+  uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
+  if (uint32_t_value != errors_mask || errors_mask == 255)
   {
     Serial.print("errorsMask: ");
-    String errorsMaskStr = toBinaryString(int16_t_value, 16);
+    String errorsMaskStr = toBinaryString(uint32_t_value, 32);
     Serial.println(errorsMaskStr);
     newTopic = String(mqttname + "/data/errors_mask");
     client.publish(newTopic.c_str(), errorsMaskStr.c_str());
-    errors_mask = int16_t_value;
+    errors_mask = uint32_t_value;
   }
 
   fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
@@ -955,7 +971,7 @@ void readCellDataRecord()
     balance_current = fl_value;
   }
 
-  byte byte_value = receivedBytes_cell[index++];
+  byte_value = receivedBytes_cell[index++];
   if (byte_value != balancing_action || balancing_action == 255)
   {
     Serial.print("Balancing_action: ");
@@ -965,9 +981,6 @@ void readCellDataRecord()
     client.publish(newTopic.c_str(), cellStr.c_str());
     balancing_action = byte_value;
   }
-
-  // ignore
-  index += 2;
 
   uint8_t uint8_t_value = receivedBytes_cell[index++];
   if (uint8_t_value != battery_soc || battery_soc == 0)
@@ -1046,13 +1059,23 @@ void readCellDataRecord()
     battery_precharge_status = byte_value;
   }
 
-  // absolutely no clue how to parse this
+  uint16_t uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != battery_user_alarm1 || battery_user_alarm1 == 0)
+  {
+    Serial.print("userAlarm1: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/battery_user_alarm1");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    battery_user_alarm1 = uint16_t_value;
+  }
+
   uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
   Serial.print("totalRuntime: ");
   Serial.println(uint32_t_value);
   cellStr = String(uint32_t_value);
   newTopic = String(mqttname + "/data/battery_total_runtime");
-  // client.publish(newTopic.c_str(), cellStr.c_str());
+  client.publish(newTopic.c_str(), cellStr.c_str());
 
   byte sec = uint32_t_value % 60;
   uint32_t_value /= 60;
@@ -1062,10 +1085,7 @@ void readCellDataRecord()
   byte days = uint32_t_value /= 24;
   Serial.println(String(days) + " days " + String(hr) + ":" + String(mi) + ":" + String(sec));
   newTopic = String(mqttname + "/data/battery_total_runtime_fmt");
-  // client.publish(newTopic.c_str(), (String(days) + " days " + String(hr) + ":" + String(mi) + ":" + String(sec)).c_str());
-
-  // ignore 1 byte
-  index += 1;
+  client.publish(newTopic.c_str(), (String(days) + " days " + String(hr) + ":" + String(mi) + ":" + String(sec)).c_str());
 
   byte_value = receivedBytes_cell[index++];
   if (byte_value != charging_mosfet_status || charging_mosfet_status == 255)
@@ -1089,29 +1109,137 @@ void readCellDataRecord()
     discharging_mosfet_status = byte_value;
   }
 
-  byte_value = receivedBytes_cell[index++];
-  if (byte_value != precharging_status || precharging_status == 255)
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != battery_user_alarm2 || battery_user_alarm2 == 0xFFFF)
   {
-    Serial.print("prechargingStatus: ");
-    Serial.println(byte_value);
-    cellStr = String(byte_value);
-    newTopic = String(mqttname + "/data/precharging_status");
+    Serial.print("userAlarm2: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/battery_user_alarm2");
     client.publish(newTopic.c_str(), cellStr.c_str());
-    precharging_status = byte_value;
+    battery_user_alarm2 = uint16_t_value;
   }
 
-  // ignore 54 byte
-  index += 54;
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != timeDcOCPR || timeDcOCPR == 0xFFFF)
+  {
+    Serial.print("timeDcOCPR: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/timeDcOCPR");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    timeDcOCPR = uint16_t_value;
+  }
+
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != timeDcSCPR || timeDcSCPR == 0xFFFF)
+  {
+    Serial.print("timeDcSCPR: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/timeDcSCPR");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    timeDcSCPR = uint16_t_value;
+  }
+
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != timeCOCPR || timeCOCPR == 0xFFFF)
+  {
+    Serial.print("timeCOCPR: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/timeCOCPR");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    timeCOCPR = uint16_t_value;
+  }
+
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != timeCSCPR || timeCSCPR == 0xFFFF)
+  {
+    Serial.print("timeCSCPR: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/timeCSCPR");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    timeCSCPR = uint16_t_value;
+  }
+
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != timeUVPR || timeUVPR == 0xFFFF)
+  {
+    Serial.print("timeUVPR: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/timeUVPR");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    timeUVPR = uint16_t_value;
+  }
+
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != timeOVPR || timeOVPR == 0xFFFF)
+  {
+    Serial.print("timeOVPR: ");
+    Serial.println(uint16_t_value);
+    cellStr = String(uint16_t_value);
+    newTopic = String(mqttname + "/data/timeOVPR");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    timeOVPR = uint16_t_value;
+  }
+
+  uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
+  if (uint16_t_value != temp_sensor_absent_mask || temp_sensor_absent_mask == 0xFFFF)
+  {
+    Serial.print("temp_sensor_absent_mask: ");
+    Serial.println(uint16_t_value);
+    String temp_sensor_absent_mask_str = toBinaryString(uint16_t_value, 16);
+    cellStr = String(temp_sensor_absent_mask_str);
+    newTopic = String(mqttname + "/data/temp_sensor_absent_mask");
+    client.publish(newTopic.c_str(), cellStr.c_str());
+    temp_sensor_absent_mask = uint16_t_value;
+  }
+
+  // index is 216 here
+
+  // according to Jihang's MODBUS documentation, the following fields can be implemented in the future
+
+  // 0x00D2 210 UINT16 2 R Reserved
+  // 0x00D4 212 UINT16 2 R 应急开关时间TimeEmergency S
+  // 0x00D6 214 UINT16 2 R 放电电流修正因子BatDisCurCorrect
+  // 0x00D8 216 UINT16 2 R 充电电流传感器电压VolChargCur mV
+  // 0x00DA 218 UINT16 2 R 放电电流传感器电压VolDischargCur mV
+  // 0x00DC 220 FLOAT 4 R 电池电压修正因子BatVolCorrect
+  // 0x00E4 228 UINT16 2 R 电池电压BatVol 0.01V
+  // 0x00E6 230 INT16 2 R 加热电流HeatCurrent mA
+  // UINT8 R 保留RVD
+  // UINT8 R 充电器状态ChargerPlugged 1：插入; 0：未插入
+  // 0x00F0 240 UINT32 4 R 系统节拍SysRunTicks 0.1S
+  // 0x00F8 248 INT16 2 R 电池温度TempBat 3 0.1℃
+  // 0x00FA 250 INT16 2 R 电池温度TempBat 4 0.1℃
+  // 0x00FC 252 INT16 2 R 电池温度TempBat 5 0.1℃
+  // 0x0100 256 UINT32 4 R RTC计数器RTCTicks 自
+  // 0x0108 264 UINT32 4 R 进入休眠时间TimeEnterSleep S
+  // 0x010C 268 UINT8 并联限流模块状态PCLModuleSta 1：打开; 0：关闭
+  //             UINT8 保留RVD
+
+  // for now we will skip the above fields
+  index += 38;
+
+  // send current index to debug topic
+  // cellStr = String(index);
+  // newTopic = String(mqttname + "/debug/last_index");
+  // client.publish(newTopic.c_str(), cellStr.c_str());
+
+  // index is 254 here
 
   fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
-  if (fl_value != temp_sensor5 || temp_sensor5 == 0)
+  if (fl_value != temp_sensor3 || temp_sensor3 == 0)
   {
-    Serial.print("tempSensor5: ");
+    Serial.print("tempSensor3: ");
     Serial.println(fl_value);
     cellStr = String(fl_value, 3);
-    newTopic = String(mqttname + "/data/temp_sensor5");
+    newTopic = String(mqttname + "/data/temp_sensor3");
     client.publish(newTopic.c_str(), cellStr.c_str());
-    temp_sensor5 = fl_value;
+    temp_sensor3 = fl_value;
   }
 
   fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
@@ -1126,14 +1254,14 @@ void readCellDataRecord()
   }
 
   fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
-  if (fl_value != temp_sensor3 || temp_sensor3 == 0)
+  if (fl_value != temp_sensor5 || temp_sensor5 == 0)
   {
-    Serial.print("tempSensor3: ");
+    Serial.print("tempSensor5: ");
     Serial.println(fl_value);
     cellStr = String(fl_value, 3);
-    newTopic = String(mqttname + "/data/temp_sensor3");
+    newTopic = String(mqttname + "/data/temp_sensor5");
     client.publish(newTopic.c_str(), cellStr.c_str());
-    temp_sensor3 = fl_value;
+    temp_sensor5 = fl_value;
   }
 
   Serial.print("Index: ");

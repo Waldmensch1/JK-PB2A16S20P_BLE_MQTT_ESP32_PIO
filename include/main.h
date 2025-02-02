@@ -4,12 +4,11 @@
 #include <PubSubClient.h>
 #include "config.h"
 
+void handleMQTTMessage(const char* topic, const char* command, byte* payload, unsigned int length, bool& flag);
 void analyze();
 boolean reconnect();
 void initWiFi();
-void readDeviceDataRecord();
-void readCellDataRecord();
-String toBinaryString(uint32_t value, int bits);
+
 
 // W-LAN Setting
 const char *ssid = SSID_NAME;
@@ -75,43 +74,3 @@ static bool ble_connected = false;
 static BLERemoteCharacteristic *pRemoteCharacteristic;
 static BLEAdvertisedDevice *myDevice;
 
-uint8_t counter_last = 0;
-uint32_t cells_used = 0;
-float volts_old[30] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-float cell_avg_voltage = 0;
-float cell_diff_voltage = 0;
-byte high_voltage_cell = 255;
-byte low_voltage_cell = 255;
-float cellResistance_old[30] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
-float temp_pwr_tube = 0;
-float cell_resistance_alert = 255;
-float battery_voltage = 0;
-float battery_power = 0;    
-float battery_charge_current = 0;
-float temp_sensor1 = 0;
-float temp_sensor2 = 0;
-float temp_sensor3 = 0;
-float temp_sensor4 = 0;
-float temp_sensor5 = 0;
-uint32_t errors_mask = 0xFFFFFFFF;
-float balance_current = 10000;
-byte balancing_action = 255;
-uint8_t battery_soc = 0;
-float capacity_remaining = 0;
-float capacity_total = 0;   
-uint32_t battery_cycle_count = 0;
-float cycle_capacity_total = 0;
-byte battery_soh = 0;
-byte battery_precharge_status = 255;
-uint16_t battery_user_alarm1 = 0xFFFF;
-uint16_t battery_user_alarm2 = 0xFFFF;
-byte charging_mosfet_status = 255;
-byte discharging_mosfet_status = 255;
-byte precharging_status = 255;
-uint16_t timeDcOCPR = 0xFFFF;
-uint16_t timeDcSCPR = 0xFFFF;
-uint16_t timeCOCPR = 0xFFFF;
-uint16_t timeCSCPR = 0xFFFF;
-uint16_t timeUVPR = 0xFFFF;
-uint16_t timeOVPR = 0xFFFF;
-uint16_t temp_sensor_absent_mask = 0xFFFF;

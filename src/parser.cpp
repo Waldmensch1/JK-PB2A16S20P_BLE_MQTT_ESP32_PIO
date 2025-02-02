@@ -67,7 +67,7 @@ uint16_t timeCOCPR = 0xFFFF;
 uint16_t timeCSCPR = 0xFFFF;
 uint16_t timeUVPR = 0xFFFF;
 uint16_t timeOVPR = 0xFFFF;
-byte temp_sensor_absent_mask = 0xFF;
+byte temp_sensor_absent_mask = 0x00;
 
 String temp_sensors_absent[6] = {
     "MOSTempSensorAbsent",
@@ -815,7 +815,7 @@ void readCellDataRecord()
     }
 
     byte_value = (receivedBytes_cell[index++]);
-    if (byte_value != temp_sensor_absent_mask || temp_sensor_absent_mask == 0xFF)
+    if (byte_value != temp_sensor_absent_mask || temp_sensor_absent_mask == 0x00)
     {
         Serial.print("temp_sensor_absent_mask: ");
         Serial.println(byte_value);

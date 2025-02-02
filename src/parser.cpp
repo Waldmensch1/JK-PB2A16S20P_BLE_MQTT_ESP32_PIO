@@ -67,7 +67,17 @@ uint16_t timeCOCPR = 0xFFFF;
 uint16_t timeCSCPR = 0xFFFF;
 uint16_t timeUVPR = 0xFFFF;
 uint16_t timeOVPR = 0xFFFF;
-uint16_t temp_sensor_absent_mask = 0xFFFF;
+byte temp_sensor_absent_mask = 0xFF;
+
+String temp_sensors_absent[6] = {
+    "MOSTempSensorAbsent",
+    "BATTempSensor1Absent",
+    "BATTempSensor2Absent",
+    "BATTempSensor3Absent",
+    "BATTempSensor4Absent",
+    "BATTempSensor5Absent"};
+
+byte battery_heating = 0xFF;
 
 void readDeviceDataRecord()
 {
@@ -804,16 +814,43 @@ void readCellDataRecord()
         timeOVPR = uint16_t_value;
     }
 
-    uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
-    if (uint16_t_value != temp_sensor_absent_mask || temp_sensor_absent_mask == 0xFFFF)
+    byte_value = (receivedBytes_cell[index++]);
+    if (byte_value != temp_sensor_absent_mask || temp_sensor_absent_mask == 0xFF)
     {
         Serial.print("temp_sensor_absent_mask: ");
-        Serial.println(uint16_t_value);
-        String temp_sensor_absent_mask_str = toBinaryString(uint16_t_value, 16);
+        Serial.println(byte_value);
+        String temp_sensor_absent_mask_str = toBinaryString(byte_value, 8);
         cellStr = String(temp_sensor_absent_mask_str);
-        newTopic = String(mqttname + "/data/temp_sensor_absent_mask");
+        newTopic = String(mqttname + "/data/temperatures/temp_sensor_absent_mask");
         client.publish(newTopic.c_str(), cellStr.c_str());
-        temp_sensor_absent_mask = uint16_t_value;
+
+        // resolve temp sensor absent mask according to 极空BMS RS485 Modbus通用协议V1.1 2024.02 Page 11
+        // MOS TempSensorAbsent; 1：Normal; 0：Missing; BIT0
+        // BATTempSensor1Absent; 1：Normal; 0：Missing; BIT1
+        // BATTempSensor2Absent; 1：Normal; 0：Missing; BIT2
+        // BATTempSensor3Absent; 1：Normal; 0：Missing; BIT3
+        // BATTempSensor4Absent; 1：Normal; 0：Missing; BIT4
+        // BATTempSensor5Absent; 1：Normal; 0：Missing; BIT5
+
+        for (int i = 0; i < 6; ++i)
+        {
+            String status = (byte_value & (1 << i)) ? "Normal" : "Missing";
+            String newTopic = mqttname + "/data/temperatures/" + temp_sensors_absent[i];
+            client.publish(newTopic.c_str(), status.c_str());
+        }
+
+        temp_sensor_absent_mask = byte_value;
+    }
+
+    byte_value = (receivedBytes_cell[index++]);
+    if (byte_value != battery_heating || battery_heating == 0xFF)
+    {
+        Serial.print("heating: ");
+        Serial.println(byte_value);
+        cellStr = String(byte_value == 1 ? "ON" : "OFF");
+        newTopic = String(mqttname + "/data/temperatures/battery_heating");
+        client.publish(newTopic.c_str(), cellStr.c_str());
+        battery_heating = byte_value;
     }
 
     // index is 216 here

@@ -37,10 +37,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
   }
 
   if (blocked_for_parsing)
-  {
-    Serial.println("Blocked while parsing data !");
     return;
-  }
 
   if (pData[0] == 0x55 && pData[1] == 0xAA && pData[2] == 0xEB && pData[3] == 0x90 && (pData[4] == CELLDATA || pData[4] == DEVICEDATA))
   {
@@ -54,26 +51,16 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
     }
 
     if (pData[4] == CELLDATA)
-    {
       actualdata = CELLDATA;
-      Serial.println("Cell Daten anerkannt !");
-    }
     else if (pData[4] == DEVICEDATA)
-    {
       actualdata = DEVICEDATA;
-      Serial.println("Device Daten anerkannt !");
-    }
 
     for (int i = 0; i < length; i++)
     {
       if (actualdata == CELLDATA)
-      {
         receivedBytes_cell[frame] = pData[i];
-      }
       else if (actualdata == DEVICEDATA)
-      {
         receivedBytes_device[frame] = pData[i];
-      }
 
       frame++;
     }
@@ -85,13 +72,9 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
     for (int i = 0; i < length; i++)
     {
       if (actualdata == CELLDATA)
-      {
         receivedBytes_cell[frame] = pData[i];
-      }
       else if (actualdata == DEVICEDATA)
-      {
         receivedBytes_device[frame] = pData[i];
-      }
 
       frame++;
     }
@@ -152,7 +135,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     Serial.println(advertisedDevice.toString().c_str());
 
     // We have found a device, let us now see if it contains the service we are looking for.
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID) && advertisedDevice.getName() == Geraetename)
+    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID) && advertisedDevice.getName() == devicename)
     {
 
       pBLEScan->stop();

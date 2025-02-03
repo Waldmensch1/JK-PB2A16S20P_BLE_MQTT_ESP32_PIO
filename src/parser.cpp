@@ -14,6 +14,7 @@ float cell_resistance_alert = 255;
 float battery_voltage = 0;
 float battery_power = 0;
 float battery_charge_current = 0;
+float battery_power_calculated = 0;
 float temp_sensor1 = 0;
 float temp_sensor2 = 0;
 float temp_sensor3 = 0;
@@ -498,6 +499,14 @@ void readCellDataRecord()
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
     publishIfChanged(battery_charge_current, fl_value, mqttname + "/data/battery_charge_current");
 
+    if (battery_charge_current < 0)
+        fl_value = 0 - battery_power;
+    else
+        fl_value = battery_power;
+
+    // this is to have the correct sign for the power (discharging "-" or charging)
+    publishIfChanged(battery_power_calculated, fl_value, mqttname + "/data/battery_power_calculated");
+
     // temp_sensor1
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_sensor1, fl_value, mqttname + "/data/temperatures/temp_sensor1");
@@ -779,4 +788,3 @@ void readCellDataRecord()
 
     blocked_for_parsing = false;
 }
-

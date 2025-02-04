@@ -157,6 +157,11 @@ void setup()
   // WIFI Setup
   initWiFi();
 
+#ifdef USE_INFLUXDB
+  // InfluxDB Setup
+  setupInfluxDB();
+#endif
+
   // MQTT Setup
   mqtt_buffer_maxed = client.setBufferSize(500);
   Serial.println("mqtt_buffer_maxed: " + String(mqtt_buffer_maxed));

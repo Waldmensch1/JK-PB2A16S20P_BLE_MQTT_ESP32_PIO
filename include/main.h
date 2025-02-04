@@ -3,6 +3,10 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "config.h"
+#ifdef USE_INFLUXDB
+#include "influxdb_handler.h"
+#endif
+
 
 void handleMQTTMessage(const char* topic, const char* command, byte* payload, unsigned int length, bool& flag);
 void analyze();

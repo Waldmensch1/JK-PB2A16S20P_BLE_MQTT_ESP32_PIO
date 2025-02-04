@@ -1,6 +1,14 @@
+#include "config.h"
 #include <Arduino.h>
 #include <PubSubClient.h>
+
 #include "arduino_base64.hpp"
+
+#ifdef USE_INFLUXDB
+#include <InfluxDbClient.h>
+#include "influxdb_handler.h"
+extern InfluxDBClient influx_client;
+#endif
 
 void readDeviceDataRecord();
 void readCellDataRecord();

@@ -100,18 +100,38 @@ void publishIfChanged(T &currentValue, T newValue, const String &topic, int deci
     {
         Serial.print(topic + ": ");
         if (decimals >= 0)
-        {
             Serial.println(newValue, decimals);
-        }
+
         else
-        {
             Serial.println(newValue);
-        }
+
         String valueStr = (decimals >= 0) ? String(newValue, decimals) : String(newValue);
         client.publish(topic.c_str(), valueStr.c_str());
         currentValue = newValue;
     }
 }
+
+#ifdef USE_INFLUXDB
+template <typename T>
+void publishIfChangedInflux(T &currentValue, T newValue, const String &topic, int decimals)
+{
+    if (currentValue != newValue)
+    {
+        Serial.print(topic + ": ");
+        if (decimals >= 0)
+        {
+            Serial.println(newValue, decimals);
+            publishToInfluxDB(topic, newValue);
+        }
+        else
+        {
+            Serial.println(newValue);
+            publishToInfluxDB(topic, newValue);
+        }
+        currentValue = newValue;
+    }
+}
+#endif
 
 String toBinaryString(uint32_t value, int bits)
 {
@@ -388,6 +408,9 @@ void readCellDataRecord()
             if (volts[i] != 0)
             {
                 client.publish(topic.c_str(), cellStr.c_str());
+#ifdef INFLUX_CELLS_VOLTAGE
+                publishToInfluxDB("cell_" + String(i + 1), volts[i]);
+#endif
             }
         }
         volts_old[i] = volts[i];
@@ -470,6 +493,9 @@ void readCellDataRecord()
     // temp_mosfet
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_mosfet, fl_value, mqttname + "/data/temperatures/temp_mosfet");
+#ifdef INFLUX_TEMP_SENSOR_MOSFET
+    publishToInfluxDB("temp_mosfet", fl_value);
+#endif
 
     // read the mask
     uint32_t_value = (receivedBytes_cell[index++] << 24) |
@@ -490,6 +516,9 @@ void readCellDataRecord()
     // battery_voltage
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
     publishIfChanged(battery_voltage, fl_value, mqttname + "/data/battery_voltage");
+#ifdef INFLUX_BATTERY_VOLTAGE
+    publishToInfluxDB("battery_voltage", fl_value);
+#endif
 
     // battery_power
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
@@ -498,6 +527,9 @@ void readCellDataRecord()
     // battery_charge_current
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
     publishIfChanged(battery_charge_current, fl_value, mqttname + "/data/battery_charge_current");
+#ifdef INFLUX_BATTERY_CURRENT
+    publishToInfluxDB("battery_current", fl_value);
+#endif
 
     if (battery_charge_current < 0)
         fl_value = 0 - battery_power;
@@ -506,14 +538,23 @@ void readCellDataRecord()
 
     // this is to have the correct sign for the power (discharging "-" or charging)
     publishIfChanged(battery_power_calculated, fl_value, mqttname + "/data/battery_power_calculated");
+#ifdef INFLUX_BATTERY_POWER
+    publishToInfluxDB("battery_power", fl_value);
+#endif
 
     // temp_sensor1
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_sensor1, fl_value, mqttname + "/data/temperatures/temp_sensor1");
+#ifdef INFLUX_TEMP_SENSOR_1
+    publishToInfluxDB("temp_sensor1", fl_value);
+#endif
 
     // temp_sensor2
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_sensor2, fl_value, mqttname + "/data/temperatures/temp_sensor2");
+#ifdef INFLUX_TEMP_SENSOR_2
+    publishToInfluxDB("temp_sensor2", fl_value);
+#endif
 
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
     if (uint32_t_value != alarms_mask || alarms_mask == 0xFFFFFFFF)
@@ -569,6 +610,9 @@ void readCellDataRecord()
 
     uint8_t uint8_t_value = receivedBytes_cell[index++];
     publishIfChanged(battery_soc, uint8_t_value, mqttname + "/data/battery_soc");
+#ifdef INFLUX_BATTERY_SOC
+    publishToInfluxDB("battery_soc", uint8_t_value);
+#endif
 
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
     publishIfChanged(battery_capacity_remaining, fl_value, mqttname + "/data/battery_capacity_remaining");
@@ -750,16 +794,25 @@ void readCellDataRecord()
     // temp_sensor3
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_sensor3, fl_value, mqttname + "/data/temperatures/temp_sensor3");
+#ifdef INFLUX_TEMP_SENSOR_3
+    publishToInfluxDB("temp_sensor3", fl_value);
+#endif
 
     // index 256
     // temp_sensor4
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_sensor4, fl_value, mqttname + "/data/temperatures/temp_sensor4");
+#ifdef INFLUX_TEMP_SENSOR_4
+    publishToInfluxDB("temp_sensor4", fl_value);
+#endif
 
     // index 258
     // temp_sensor5
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
     publishIfChanged(temp_sensor5, fl_value, mqttname + "/data/temperatures/temp_sensor5");
+#ifdef INFLUX_TEMP_SENSOR_5
+    publishToInfluxDB("temp_sensor5", fl_value);
+#endif
 
     // index 260
     index += 2; // skip 2 sus bytes

@@ -9,8 +9,9 @@ const char *influx_devicename = DEVICENAME; // JK-B2A24S20P JK-B2A24S15P
 String influx_prefix = influx_devicename + String("_");
 
 
-void setupInfluxDB()
+void init_influxdb()
 {
+    Serial.println("Init InfluxDB client");
     // Set up the client
     influx_client.setInsecure(true); // Set to true if you are using a self-signed certificate
     influx_client.setConnectionParams(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN);

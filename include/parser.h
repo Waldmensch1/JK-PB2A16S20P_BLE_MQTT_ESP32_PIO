@@ -1,6 +1,10 @@
+#ifndef PARSER_H
+#define PARSER_H
+
 #include "config.h"
+#include "settings.h"
 #include <Arduino.h>
-#include <PubSubClient.h>
+#include "mqtt_handler.h"
 
 #include "arduino_base64.hpp"
 
@@ -12,12 +16,11 @@ extern InfluxDBClient influx_client;
 
 void readDeviceDataRecord();
 void readCellDataRecord();
-String toBinaryString(uint32_t value, int bits);
 
 extern byte receivedBytes_cell[320];
 extern byte receivedBytes_device[320];
-extern String mqttname;
 extern bool blocked_for_parsing;
 extern bool debug_flg_full_log;
+extern uint16_t publish_delay;
 
-extern PubSubClient client;
+#endif // PARSER_H

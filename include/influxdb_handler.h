@@ -7,7 +7,7 @@
 #include <Arduino.h>
 #include "config.h"
 
-void setupInfluxDB();
+void init_influxdb();
 void publishToInfluxDB(const String &topic, int value);
 void publishToInfluxDB(const String &topic, float value);
 

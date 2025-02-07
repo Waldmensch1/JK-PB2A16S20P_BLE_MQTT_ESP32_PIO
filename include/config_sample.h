@@ -13,8 +13,10 @@
 #define MQTT_USERNAME ""
 #define MQTT_PASSWORD ""
 
+#define REBOOT_AFTER_BLE_RETRY 20
+#define PUBLISH_DELAY 0
 
-
+// enable InfluxDB
 //#define USE_INFLUXDB
 
 #ifdef USE_INFLUXDB
@@ -52,4 +54,14 @@
 //#define INFLUX_BATTERY_SOC
 //#define INFLUX_CELLS_VOLTAGE
 
+#endif
+
+// This is not ready and todo. Leave that commented out
+//#define USE_RS485
+
+#ifdef USE_RS485
+#define RS485_RX 16
+#define RS485_TX 17
+#define DE_PIN 4
+#define DE_PIN 2
 #endif

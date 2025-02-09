@@ -20,7 +20,5 @@ void readCellDataRecord();
 extern byte receivedBytes_cell[320];
 extern byte receivedBytes_device[320];
 extern bool blocked_for_parsing;
-extern bool debug_flg_full_log;
-extern uint16_t publish_delay;
 
 #endif // PARSER_H

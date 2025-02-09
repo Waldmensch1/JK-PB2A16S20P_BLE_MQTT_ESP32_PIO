@@ -15,8 +15,7 @@ String mqttname = String("jk_ble_listener/") + mqtt_devicename;
 long lastReconnectAttempt = 0;
 long mqttpublishtime_offset = 1000;
 
-bool debug_flg = false;
-bool debug_flg_full_log = false;
+
 
 String willTopic = String("jk_ble_listener/") + String(mqtt_devicename) + String("/status/status");
 String willMessage = "offline";
@@ -78,6 +77,8 @@ void handleMQTTMessage(const char *topic, const char *command, byte *payload, un
     {
         String Command = String((char *)payload, length);
         flag = (Command == "true");
+        write_setting("debug_flg", debug_flg);
+        write_setting("debug_flg_full_log", debug_flg_full_log);
     }
 }
 

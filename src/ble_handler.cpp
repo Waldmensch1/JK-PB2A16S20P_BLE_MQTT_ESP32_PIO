@@ -280,10 +280,8 @@ void ble_loop()
 
     if (ble_connected)
     {
-
         if (received_complete)
         {
-
             if (new_data)
             {
                 analyze();

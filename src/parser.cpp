@@ -158,8 +158,8 @@ void readDeviceDataRecord()
     // Serial.print("counter: ");
     // Serial.println(counter);
 
-    String cellStr = String(counter);
-    mqtt_client.publish((mqttname + "/device/read_count").c_str(), cellStr.c_str());
+    String str_value = String(counter);
+    mqtt_client.publish((mqttname + "/device/read_count").c_str(), str_value.c_str());
 
     // Read vendorID
     char vendorID[50];
@@ -171,8 +171,8 @@ void readDeviceDataRecord()
     // Serial.print("vendorID: ");
     // Serial.println(vendorID);
 
-    cellStr = String(vendorID);
-    mqtt_client.publish((mqttname + "/device/vendor_id").c_str(), cellStr.c_str());
+    str_value = String(vendorID);
+    mqtt_client.publish((mqttname + "/device/vendor_id").c_str(), str_value.c_str());
 
     // Skip the 0x0
     while (index < 300 && receivedBytes_device[index] == 0x0)
@@ -187,8 +187,8 @@ void readDeviceDataRecord()
     hardwareVersion[hardwareVersionIndex] = '\0';
     // Serial.print("hardwareVersion: ");
     // Serial.println(hardwareVersion);
-    cellStr = String(hardwareVersion);
-    mqtt_client.publish((mqttname + "/device/hw_revision").c_str(), cellStr.c_str());
+    str_value = String(hardwareVersion);
+    mqtt_client.publish((mqttname + "/device/hw_revision").c_str(), str_value.c_str());
 
     // Skip the 0x0
     while (index < 300 && receivedBytes_device[index] == 0x0)
@@ -204,8 +204,8 @@ void readDeviceDataRecord()
     // Serial.print("softwareVersion: ");
     // Serial.println(softwareVersion);
 
-    cellStr = String(softwareVersion);
-    mqtt_client.publish((mqttname + "/device/sw_version").c_str(), cellStr.c_str());
+    str_value = String(softwareVersion);
+    mqtt_client.publish((mqttname + "/device/sw_version").c_str(), str_value.c_str());
 
     // Skip the 0x0
     while (index < 300 && receivedBytes_device[index] == 0x0)
@@ -220,8 +220,8 @@ void readDeviceDataRecord()
     // Serial.print("uptime: ");
     // Serial.println(uptime);
 
-    cellStr = String(uptime);
-    mqtt_client.publish((mqttname + "/device/uptime").c_str(), cellStr.c_str());
+    str_value = String(uptime);
+    mqtt_client.publish((mqttname + "/device/uptime").c_str(), str_value.c_str());
 
     byte sec = uptime % 60;
     uptime /= 60;
@@ -240,8 +240,8 @@ void readDeviceDataRecord()
     // Serial.print("powerUpTimes: ");
     // Serial.println(powerUpTimes);
 
-    cellStr = String(powerUpTimes);
-    mqtt_client.publish((mqttname + "/device/power_up_times").c_str(), cellStr.c_str());
+    str_value = String(powerUpTimes);
+    mqtt_client.publish((mqttname + "/device/power_up_times").c_str(), str_value.c_str());
 
     // Skip the 0x0
     while (index < 300 && receivedBytes_device[index] == 0x0)
@@ -257,8 +257,8 @@ void readDeviceDataRecord()
     // Serial.print("deviceName: ");
     // Serial.println(deviceName);
 
-    cellStr = String(deviceName);
-    mqtt_client.publish((mqttname + "/device/device_name").c_str(), cellStr.c_str());
+    str_value = String(deviceName);
+    mqtt_client.publish((mqttname + "/device/device_name").c_str(), str_value.c_str());
 
     // Skip the 0x0
     while (index < 300 && receivedBytes_device[index] == 0x0)
@@ -274,8 +274,8 @@ void readDeviceDataRecord()
     // Serial.print("passCode: ");
     // Serial.println(passCode);
 
-    cellStr = String(passCode);
-    mqtt_client.publish((mqttname + "/device/device_passwd").c_str(), cellStr.c_str());
+    str_value = String(passCode);
+    mqtt_client.publish((mqttname + "/device/device_passwd").c_str(), str_value.c_str());
 
     while (index < 300 && receivedBytes_device[index] == 0x0)
         index++;
@@ -290,8 +290,8 @@ void readDeviceDataRecord()
     // Serial.print("manufacturingDate: ");
     // Serial.println(manufacturingDate);
 
-    cellStr = String(manufacturingDate);
-    mqtt_client.publish((mqttname + "/device/manufacturing_date").c_str(), cellStr.c_str());
+    str_value = String(manufacturingDate);
+    mqtt_client.publish((mqttname + "/device/manufacturing_date").c_str(), str_value.c_str());
 
     while (index < 300 && receivedBytes_device[index] == 0x0)
         index++;
@@ -305,8 +305,8 @@ void readDeviceDataRecord()
     // Serial.print("serialNumber: ");
     // Serial.println(serialNumber);
 
-    cellStr = String(serialNumber);
-    mqtt_client.publish((mqttname + "/device/serial_number").c_str(), cellStr.c_str());
+    str_value = String(serialNumber);
+    mqtt_client.publish((mqttname + "/device/serial_number").c_str(), str_value.c_str());
 
     while (index < 300 && receivedBytes_device[index] == 0x0)
         index++;
@@ -320,8 +320,8 @@ void readDeviceDataRecord()
     // Serial.print("passCode2: ");
     // Serial.println(passCode2);
 
-    cellStr = String(passCode2);
-    mqtt_client.publish((mqttname + "/device/device_passwd2").c_str(), cellStr.c_str());
+    str_value = String(passCode2);
+    mqtt_client.publish((mqttname + "/device/device_passwd2").c_str(), str_value.c_str());
 
     while (index < 300 && receivedBytes_device[index] == 0x0)
         index++;
@@ -335,8 +335,8 @@ void readDeviceDataRecord()
     // Serial.print("userData: ");
     // Serial.println(userData);
 
-    cellStr = String(userData);
-    mqtt_client.publish((mqttname + "/device/user_data").c_str(), cellStr.c_str());
+    str_value = String(userData);
+    mqtt_client.publish((mqttname + "/device/user_data").c_str(), str_value.c_str());
 
     while (index < 300 && receivedBytes_device[index] == 0x0)
         index++;
@@ -350,8 +350,8 @@ void readDeviceDataRecord()
     // Serial.print("setupPasscode: ");
     // Serial.println(setupPasscode);
 
-    cellStr = String(setupPasscode);
-    mqtt_client.publish((mqttname + "/device/setup_passcode").c_str(), cellStr.c_str());
+    str_value = String(setupPasscode);
+    mqtt_client.publish((mqttname + "/device/setup_passcode").c_str(), str_value.c_str());
 
     blocked_for_parsing = false;
 }
@@ -359,15 +359,15 @@ void readDeviceDataRecord()
 void readCellDataRecord()
 {
     unsigned long currentTime = millis();
-    //mqtt_client.publish((mqttname + "/debug/publish_delay").c_str(), String(publish_delay).c_str());
+    // mqtt_client.publish((mqttname + "/debug/publish_delay").c_str(), String(publish_delay).c_str());
 
     unsigned long timeDiff = currentTime - lastPublishTime;
-    //mqtt_client.publish((mqttname + "/debug/timeDiff").c_str(), String(timeDiff).c_str());
+    // mqtt_client.publish((mqttname + "/debug/timeDiff").c_str(), String(timeDiff).c_str());
 
     if (publish_delay > 0 && (currentTime - lastPublishTime) < (publish_delay * 1000))
     {
-        //mqtt_client.publish((mqttname + "/debug/indelay").c_str(), "true");
-        // Do nothing if the delay has not passed
+        // mqtt_client.publish((mqttname + "/debug/indelay").c_str(), "true");
+        //  Do nothing if the delay has not passed
         blocked_for_parsing = false;
         return;
     }
@@ -385,29 +385,32 @@ void readCellDataRecord()
     Serial.print("counter: ");
     Serial.println(counter);
 
-    String newTopic;
-    String cellStr;
+    String str_topic;
+    String str_value;
 
-    newTopic = String(mqttname + "/data/readcount");
-    cellStr = String(counter);
-    mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
+    str_topic = String(mqttname + "/data/readcount");
+    str_value = String(counter);
+    mqtt_client.publish(str_topic.c_str(), str_value.c_str());
 
     if (debug_flg_full_log)
     {
         uint16_t inputLength = sizeof(receivedBytes_cell);
         char output[base64::encodeLength(inputLength)];
         base64::encode(receivedBytes_cell, inputLength, output);
-        newTopic = String(mqttname + "/debug/rawdata");
-        cellStr = String(output);
-        mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
+        str_topic = String(mqttname + "/debug/rawdata");
+        str_value = String(output);
+        mqtt_client.publish(str_topic.c_str(), str_value.c_str());
         mqtt_client.publish((mqttname + "/debug/enabled").c_str(), "true");
     }
     else
     {
-        newTopic = String(mqttname + "/debug/rawdata");
-        cellStr = "not published";
-        mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
-        mqtt_client.publish((mqttname + "/debug/enabled").c_str(), "false");
+        if (debug_flg)
+        {
+            str_topic = String(mqttname + "/debug/rawdata");
+            str_value = "not published";
+            mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+            mqtt_client.publish((mqttname + "/debug/enabled").c_str(), "false");
+        }
     }
 
     // Read cell voltages
@@ -419,22 +422,22 @@ void readCellDataRecord()
     }
 
     Serial.print("volts: ");
-    newTopic = String(mqttname + "/data/cells/voltage/cell_v_");
+    str_topic = String(mqttname + "/data/cells/voltage/cell_v_");
     for (uint8_t i = 0; i < 30; i++)
     {
         Serial.print(volts[i]);
         Serial.print(" ");
         if (volts[i] != volts_old[i][MQTT])
         {
-            cellStr = String(volts[i], 3);
+            str_value = String(volts[i], 3);
             String topic;
             if (i < 9)
-                topic = newTopic + String("0") + String(i + 1);
+                topic = str_topic + String("0") + String(i + 1);
             else
-                topic = newTopic + String(i + 1);
+                topic = str_topic + String(i + 1);
             if (volts[i] != 0)
             {
-                mqtt_client.publish(topic.c_str(), cellStr.c_str());
+                mqtt_client.publish(topic.c_str(), str_value.c_str());
 #ifdef INFLUX_CELLS_VOLTAGE
                 publishToInfluxDB("cell_" + String(i + 1), volts[i]);
 #endif
@@ -453,15 +456,18 @@ void readCellDataRecord()
                               (receivedBytes_cell[index++] << 8) |
                               (receivedBytes_cell[index++]);
 
-    if (uint32_t_value != cells_used || cells_used == 0)
+    if (debug_flg)
     {
-        Serial.print("mask: ");
-        String cellsUsedMaskStr = toBinaryString(uint32_t_value, 32);
-        Serial.println(cellsUsedMaskStr);
+        if (uint32_t_value != cells_used || cells_used == 0)
+        {
+            Serial.print("mask: ");
+            String cellsUsedMaskStr = toBinaryString(uint32_t_value, 32);
+            Serial.println(cellsUsedMaskStr);
 
-        newTopic = String(mqttname + "/data/cells_used");
-        mqtt_client.publish(newTopic.c_str(), cellsUsedMaskStr.c_str());
-        cells_used = uint32_t_value;
+            str_topic = String(mqttname + "/data/cells_used");
+            mqtt_client.publish(str_topic.c_str(), cellsUsedMaskStr.c_str());
+            cells_used = uint32_t_value;
+        }
     }
 
     // Read cell average voltage
@@ -490,7 +496,7 @@ void readCellDataRecord()
 
     Serial.print("cellResistance: ");
 
-    newTopic = String(mqttname + "/data/cells/resistance/cell_r_");
+    str_topic = String(mqttname + "/data/cells/resistance/cell_r_");
     for (uint8_t i = 0; i < 30; i++)
     {
         Serial.print(cellResistance[i]);
@@ -499,15 +505,15 @@ void readCellDataRecord()
         if (cellResistance[i] != cellResistance_old[i][MQTT] || cellResistance_old[i][MQTT] == 0)
         {
 
-            cellStr = String(cellResistance[i], 3);
+            str_value = String(cellResistance[i], 3);
             String topic;
             if (i < 9)
-                topic = newTopic + String("0") + String(i + 1);
+                topic = str_topic + String("0") + String(i + 1);
             else
-                topic = newTopic + String(i + 1);
+                topic = str_topic + String(i + 1);
             if (cellResistance[i] != 0)
             {
-                mqtt_client.publish(topic.c_str(), cellStr.c_str());
+                mqtt_client.publish(topic.c_str(), str_value.c_str());
             }
             cellResistance_old[i][MQTT] = cellResistance[i];
         }
@@ -530,14 +536,17 @@ void readCellDataRecord()
                      (receivedBytes_cell[index++] << 8) |
                      (receivedBytes_cell[index++]);
 
-    if (uint32_t_value != cell_resistance_alert[MQTT] || cell_resistance_alert[MQTT] == 255)
+    if (debug_flg)
     {
-        Serial.print("resistanceAlertMask: ");
-        String resistanceAlertMaskStr = toBinaryString(uint32_t_value, 32);
-        Serial.println(resistanceAlertMaskStr);
-        newTopic = String(mqttname + "/data/cell_resistance_alert");
-        mqtt_client.publish(newTopic.c_str(), resistanceAlertMaskStr.c_str());
-        cell_resistance_alert[MQTT] = uint32_t_value;
+        if (uint32_t_value != cell_resistance_alert[MQTT] || cell_resistance_alert[MQTT] == 255)
+        {
+            Serial.print("resistanceAlertMask: ");
+            String resistanceAlertMaskStr = toBinaryString(uint32_t_value, 32);
+            Serial.println(resistanceAlertMaskStr);
+            str_topic = String(mqttname + "/data/cell_resistance_alert");
+            mqtt_client.publish(str_topic.c_str(), resistanceAlertMaskStr.c_str());
+            cell_resistance_alert[MQTT] = uint32_t_value;
+        }
     }
 
     // battery_voltage
@@ -558,7 +567,7 @@ void readCellDataRecord()
     publishIfChangedInflux(battery_charge_current[INFLUX], fl_value, "battery_current");
 #endif
 
-    if (battery_charge_current < 0)
+    if (battery_charge_current[MQTT] < 0)
         fl_value = 0 - battery_power[MQTT];
     else
         fl_value = battery_power[MQTT];
@@ -586,11 +595,15 @@ void readCellDataRecord()
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
     if (uint32_t_value != alarms_mask[MQTT] || alarms_mask[MQTT] == 0xFFFFFFFF)
     {
-        Serial.print("errorsMask: ");
-        String errorsMaskStr = toBinaryString(uint32_t_value, 32);
-        Serial.println(errorsMaskStr);
-        newTopic = String(mqttname + "/data/alarms/alarms_mask");
-        mqtt_client.publish(newTopic.c_str(), errorsMaskStr.c_str());
+
+        if (debug_flg)
+        {
+            Serial.print("errorsMask: ");
+            String errorsMaskStr = toBinaryString(uint32_t_value, 32);
+            Serial.println(errorsMaskStr);
+            str_topic = String(mqttname + "/data/alarms/alarms_mask");
+            mqtt_client.publish(str_topic.c_str(), errorsMaskStr.c_str());
+        }
 
         // resolve alarms according to 极空BMS RS485 Modbus通用协议V1.1 2024.02 Page 10
 
@@ -622,8 +635,8 @@ void readCellDataRecord()
         for (int i = 0; i < 24; ++i)
         {
             String status = (uint32_t_value & (1 << i)) ? "ON" : "OFF";
-            newTopic = mqttname + "/data/alarms/" + alarmStrings[i];
-            mqtt_client.publish(newTopic.c_str(), status.c_str());
+            str_topic = mqttname + "/data/alarms/" + alarmStrings[i];
+            mqtt_client.publish(str_topic.c_str(), status.c_str());
         }
 
         alarms_mask[MQTT] = uint32_t_value;
@@ -665,9 +678,9 @@ void readCellDataRecord()
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
     Serial.print("totalRuntime: ");
     Serial.println(uint32_t_value);
-    cellStr = String(uint32_t_value);
-    newTopic = String(mqttname + "/data/battery_total_runtime");
-    mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
+    str_value = String(uint32_t_value);
+    str_topic = String(mqttname + "/data/battery_total_runtime");
+    mqtt_client.publish(str_topic.c_str(), str_value.c_str());
 
     byte sec = uint32_t_value % 60;
     uint32_t_value /= 60;
@@ -676,8 +689,8 @@ void readCellDataRecord()
     byte hr = uint32_t_value % 24;
     byte days = uint32_t_value /= 24;
     Serial.println(String(days) + " days " + String(hr) + ":" + String(mi) + ":" + String(sec));
-    newTopic = String(mqttname + "/data/battery_total_runtime_fmt");
-    mqtt_client.publish(newTopic.c_str(), (String(days) + " days " + String(hr) + ":" + String(mi) + ":" + String(sec)).c_str());
+    str_topic = String(mqttname + "/data/battery_total_runtime_fmt");
+    mqtt_client.publish(str_topic.c_str(), (String(days) + " days " + String(hr) + ":" + String(mi) + ":" + String(sec)).c_str());
 
     // charging_mosfet_status
     byte_value = receivedBytes_cell[index++];
@@ -718,12 +731,15 @@ void readCellDataRecord()
     byte_value = (receivedBytes_cell[index++]);
     if (byte_value != temp_sensor_absent_mask || temp_sensor_absent_mask == 0x00)
     {
-        Serial.print("temp_sensor_absent_mask: ");
-        Serial.println(byte_value);
-        String temp_sensor_absent_mask_str = toBinaryString(byte_value, 8);
-        cellStr = String(temp_sensor_absent_mask_str);
-        newTopic = String(mqttname + "/data/temperatures/temp_sensor_absent_mask");
-        mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
+        if (debug_flg)
+        {
+            Serial.print("temp_sensor_absent_mask: ");
+            Serial.println(byte_value);
+            String temp_sensor_absent_mask_str = toBinaryString(byte_value, 8);
+            str_value = String(temp_sensor_absent_mask_str);
+            str_topic = String(mqttname + "/data/temperatures/temp_sensor_absent_mask");
+            mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+        }
 
         // resolve temp sensor absent mask according to 极空BMS RS485 Modbus通用协议V1.1 2024.02 Page 11
         // MOS TempSensorAbsent; 1：Normal; 0：Missing; BIT0
@@ -736,8 +752,8 @@ void readCellDataRecord()
         for (int i = 0; i < 6; ++i)
         {
             String status = (byte_value & (1 << i)) ? "Normal" : "Missing";
-            String newTopic = mqttname + "/data/temperatures/" + temp_sensors_absent[i];
-            mqtt_client.publish(newTopic.c_str(), status.c_str());
+            String str_topic = mqttname + "/data/temperatures/" + temp_sensors_absent[i];
+            mqtt_client.publish(str_topic.c_str(), status.c_str());
         }
 
         temp_sensor_absent_mask = byte_value;
@@ -748,9 +764,12 @@ void readCellDataRecord()
     publishIfChanged(battery_heating[MQTT], byte_value, mqttname + "/data/temperatures/battery_heating");
 
     // send current index to debug topic
-    cellStr = String(index);
-    newTopic = String(mqttname + "/debug/last_index_1");
-    mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
+    if (debug_flg)
+    {
+        str_value = String(index);
+        str_topic = String(mqttname + "/debug/last_index_1");
+        mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+    }
 
     // index 216
     index += 1; // skip 1 reserved byte
@@ -758,27 +777,52 @@ void readCellDataRecord()
     // index 217
     // suspect: time_emergency
     uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
-    publishIfChanged(time_emergency[MQTT], uint16_t_value, mqttname + "/data/sus/time_emergency");
+    if (debug_flg)
+    {
+        Serial.print("time_emergency: ");
+        Serial.println(uint16_t_value);
+        publishIfChanged(time_emergency[MQTT], uint16_t_value, mqttname + "/data/sus/time_emergency");
+    }
 
     // index 219
     // suspect:  Discharge current correction factor
     uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
-    publishIfChanged(bat_dis_cur_correct[MQTT], uint16_t_value, mqttname + "/data/sus/bat_dis_cur_correct");
+    if (debug_flg)
+    {
+        Serial.print("bat_dis_cur_correct: ");
+        Serial.println(uint16_t_value);
+        publishIfChanged(bat_dis_cur_correct[MQTT], uint16_t_value, mqttname + "/data/sus/bat_dis_cur_correct");
+    }
 
     // index 221
     // suspect: Charging current sensor voltage
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
-    publishIfChanged(vol_charg_cur[MQTT], fl_value, mqttname + "/data/sus/vol_charg_cur");
+    if (debug_flg)
+    {
+        Serial.print("vol_charg_cur: ");
+        Serial.println(fl_value);
+        publishIfChanged(vol_charg_cur[MQTT], fl_value, mqttname + "/data/sus/vol_charg_cur");
+    }
 
     // index 223
     // suspect: Discharge current sensor voltage.
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
-    publishIfChanged(vol_discharg_cur[MQTT], fl_value, mqttname + "/data/sus/vol_discharg_cur");
+    if (debug_flg)
+    {
+        Serial.print("vol_discharg_cur: ");
+        Serial.println(fl_value);
+        publishIfChanged(vol_discharg_cur[MQTT], fl_value, mqttname + "/data/sus/vol_discharg_cur");
+    }
 
     // index 225
     // suspect: Battery voltage correction factor
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
-    publishIfChanged(bat_vol_correct[MQTT], fl_value, mqttname + "/data/sus/bat_vol_correct");
+    if (debug_flg)
+    {
+        Serial.print("bat_vol_correct: ");
+        Serial.println(fl_value);
+        publishIfChanged(bat_vol_correct[MQTT], fl_value, mqttname + "/data/sus/bat_vol_correct");
+    }
 
     // index 229
     index += 4; // skip 4 reserved bytes
@@ -786,12 +830,22 @@ void readCellDataRecord()
     // index 233
     // suspect: Battery voltage
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.01;
-    publishIfChanged(bat_vol[MQTT], fl_value, mqttname + "/data/sus/bat_vol");
+    if (debug_flg)
+    {
+        Serial.print("bat_vol: ");
+        Serial.println(fl_value);
+        publishIfChanged(bat_vol[MQTT], fl_value, mqttname + "/data/sus/bat_vol");
+    }
 
     // index 235
     // suspect: Heating current
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
-    publishIfChanged(heat_current[MQTT], fl_value, mqttname + "/data/sus/heat_current");
+    if (debug_flg)
+    {
+        Serial.print("heat_current: ");
+        Serial.println(fl_value);
+        publishIfChanged(heat_current[MQTT], fl_value, mqttname + "/data/sus/heat_current");
+    }
 
     // index 237
     //  skip 7 sus bytes
@@ -799,12 +853,22 @@ void readCellDataRecord()
 
     // index 245
     byte_value = receivedBytes_cell[index++];
-    publishIfChanged(charger_plugged[MQTT], byte_value, mqttname + "/data/sus/charger_plugged");
+    if (debug_flg)
+    {
+        Serial.print("charger_plugged: ");
+        Serial.println(byte_value);
+        publishIfChanged(charger_plugged[MQTT], byte_value, mqttname + "/data/sus/charger_plugged");
+    }
 
     // index 246
     // 0x00F0 240 UINT32 4 R 系统节拍SysRunTicks 0.1S
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
-    publishIfChanged(sys_run_ticks[MQTT], uint32_t_value, mqttname + "/data/sus/sys_run_ticks");
+    if (debug_flg)
+    {
+        Serial.print("sys_run_ticks: ");
+        Serial.println(uint32_t_value);
+        publishIfChanged(sys_run_ticks[MQTT], uint32_t_value, mqttname + "/data/sus/sys_run_ticks");
+    }
 
     // index 250
     index += 2; // skip 2 sus bytes
@@ -814,9 +878,12 @@ void readCellDataRecord()
 
     // index 254
     // send current index to debug topic
-    cellStr = String(index);
-    newTopic = String(mqttname + "/debug/last_index_2");
-    mqtt_client.publish(newTopic.c_str(), cellStr.c_str());
+    if (debug_flg)
+    {
+        str_value = String(index);
+        str_topic = String(mqttname + "/debug/last_index_2");
+        mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+    }
 
     // temp_sensor3
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
@@ -847,7 +914,12 @@ void readCellDataRecord()
     // index 262
     // suspect: rtc_ticks
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
-    publishIfChanged(rtc_ticks[MQTT], uint32_t_value, mqttname + "/data/sus/rtc_ticks");
+    if (debug_flg)
+    {
+        Serial.print("rtc_ticks: ");
+        Serial.println(uint32_t_value);
+        publishIfChanged(rtc_ticks[MQTT], uint32_t_value, mqttname + "/data/sus/rtc_ticks");
+    }
 
     // index 266
     index += 4; // skip 4 sus bytes
@@ -855,12 +927,22 @@ void readCellDataRecord()
     // index 270
     // suspect: time_enter_sleep
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
-    publishIfChanged(time_enter_sleep[MQTT], uint32_t_value, mqttname + "/data/sus/time_enter_sleep");
+    if (debug_flg)
+    {
+        Serial.print("time_enter_sleep: ");
+        Serial.println(uint32_t_value);
+        publishIfChanged(time_enter_sleep[MQTT], uint32_t_value, mqttname + "/data/sus/time_enter_sleep");
+    }
 
     // index 274
     // suspect: PCLModuleSta Parallel current limiting module status 1: on; 0: off
     byte_value = receivedBytes_cell[index++];
-    publishIfChanged(pcl_module_status[MQTT], byte_value, mqttname + "/data/sus/pcl_module_status");
+    if (debug_flg)
+    {
+        Serial.print("pcl_module_status: ");
+        Serial.println(byte_value);
+        publishIfChanged(pcl_module_status[MQTT], byte_value, mqttname + "/data/sus/pcl_module_status");
+    }
 
     // index 275
     Serial.print("Index: ");

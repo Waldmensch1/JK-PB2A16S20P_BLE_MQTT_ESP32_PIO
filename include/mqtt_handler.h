@@ -11,9 +11,6 @@
 void mqtt_loop();
 void mqtt_init();
 
-extern bool debug_flg;
-extern bool debug_flg_full_log;
-
 // MQTT Setting
 extern String mqttname;
 extern long mqttpublishtime_offset;

@@ -13,10 +13,23 @@
 #define MQTT_USERNAME ""
 #define MQTT_PASSWORD ""
 
+// this attached a unique id to the mqtt client name. This is useful if 
+// you have multiple devices with the same name. It collides with the
+// retained messages on the broker, so last will messages are not working
+// Uncomment only if you have problems connecting to the broker
+//#define USE_RANDOM_CLIENT_ID
+
+// reboot after BLE scans without success
 #define REBOOT_AFTER_BLE_RETRY 20
+
+// only publish every this seconds
 #define PUBLISH_DELAY 0
 
-// enable InfluxDB
+// publish values also if they are not changed. 0 = off, n = seconds 
+#define MIN_PUBLISH_TIME 300
+
+
+
 //#define USE_INFLUXDB
 
 #ifdef USE_INFLUXDB
@@ -25,13 +38,13 @@
 #define INFLUXDB_URL "http://192.168.178.195:8086"
 // InfluxDB v2 server or cloud API authentication token (Use: InfluxDB UI -> Load Data -> Tokens -> <select token>)
 // InfluxDB 1.8+ (v2 compatibility API) use form user:password, eg. admin:adminpass
-#define INFLUXDB_TOKEN "token"
+#define INFLUXDB_TOKEN "your token"
 // InfluxDB v2 organization name or id (Use: InfluxDB UI -> Settings -> Profile -> <name under tile> )
 // InfluxDB 1.8+ (v2 compatibility API) use any non empty string
-#define INFLUXDB_ORG "organisation"
+#define INFLUXDB_ORG "your org"
 // InfluxDB v2 bucket name (Use: InfluxDB UI -> Load Data -> Buckets)
 // InfluxDB 1.8+ (v2 compatibility API) use database name
-#define INFLUXDB_BUCKET "bucket"
+#define INFLUXDB_BUCKET "your bucket"
 
 // Set timezone string according to https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
 // Examples:
@@ -41,7 +54,6 @@
 //  Central Europe: "CET-1CEST,M3.5.0,M10.5.0/3"
 #define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
 
-//-------- uncomment the following lines to enable the respective InfluxDB data points --------
 //#define INFLUX_TEMP_SENSOR_1
 //#define INFLUX_TEMP_SENSOR_2
 //#define INFLUX_TEMP_SENSOR_3
@@ -63,5 +75,5 @@
 #define RS485_RX 16
 #define RS485_TX 17
 #define DE_PIN 4
-#define DE_PIN 2
+#define RE_PIN 2
 #endif

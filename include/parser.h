@@ -5,7 +5,7 @@
 #include "settings.h"
 #include <Arduino.h>
 #include "mqtt_handler.h"
-
+#include <map>
 #include "arduino_base64.hpp"
 
 #ifdef USE_INFLUXDB
@@ -14,11 +14,10 @@
 extern InfluxDBClient influx_client;
 #endif
 
-void readDeviceDataRecord();
-void readCellDataRecord();
+void readDeviceDataRecord(void* message, const char *devicename);
+void readCellDataRecord(void* message, const char *devicename);
+void readConfigDataRecord(void* message, const char *devicename);
 
-extern byte receivedBytes_cell[320];
-extern byte receivedBytes_device[320];
 extern bool blocked_for_parsing;
 
 #endif // PARSER_H

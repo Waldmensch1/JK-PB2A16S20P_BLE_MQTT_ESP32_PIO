@@ -9,7 +9,7 @@ const char *mqtt_server = MQTT_SERVER;
 const int mqtt_port = MQTT_PORT;
 const char *mqtt_username = MQTT_USERNAME;
 const char *mqtt_passwort = MQTT_PASSWORD;
-const char *mqtt_devicename = MQTT_CLTNAME;
+const char *mqtt_devicename = DEVICENAME;
 String mqtt_main_topic = String(TOPIC_BASE);
 String mqttname = mqtt_main_topic + mqtt_devicename;
 
@@ -112,6 +112,9 @@ boolean reconnect() {
 
         mqtt_client.publish((mqttname + "/parameter/publish_delay").c_str(), String(publish_delay).c_str());
         mqtt_client.subscribe((mqttname + "/parameter/publish_delay").c_str()); // debug_flg_full_log
+
+        mqtt_client.publish((mqttname + "/parameter/min_publish_time").c_str(), String(min_publish_time).c_str());
+        mqtt_client.subscribe((mqttname + "/parameter/min_publish_time").c_str()); // min_publish_time
 
         mqtt_client.publish((mqttname + "/status/status").c_str(), String("online").c_str(), true);
         mqtt_client.publish((mqttname + "/status/ipaddress").c_str(), WiFi.localIP().toString().c_str());

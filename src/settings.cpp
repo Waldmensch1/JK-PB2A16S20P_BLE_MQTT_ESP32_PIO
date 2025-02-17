@@ -3,6 +3,7 @@
 Preferences prefs;
 
 uint16_t publish_delay;
+uint16_t min_publish_time;
 bool debug_flg = false;
 bool debug_flg_full_log = false;
 
@@ -45,6 +46,11 @@ void re_read_settings() {
     // Limit to 1000 seconds as sometimes the value is corrupted 0xFFFF
     publish_delay = publish_delay > 1000 ? (uint16_t)PUBLISH_DELAY : publish_delay;
     DEBUG_PRINTLN("Re-Read Value for publish_delay is " + String(publish_delay));
+
+    min_publish_time = read_setting("min_publish_time", (uint16_t)MIN_PUBLISH_TIME);
+    // sometimes the value is corrupted 0xFFFF
+    min_publish_time = min_publish_time > 1000 ? (uint16_t)MIN_PUBLISH_TIME : min_publish_time;
+    DEBUG_PRINTLN("Re-Read Value for min_publish_time is " + String(min_publish_time));
 
     debug_flg = read_setting("debug_flg", false);
     DEBUG_PRINTLN("Re-Read Value for debug_flg is " + String(debug_flg));

@@ -113,7 +113,7 @@ void publishIfChanged(T &currentValue, T newValue, const String &topic, int deci
     unsigned long lastPublishTime = lastPublishTimes[topic];
 
     // Check if the value has changed or MIN_PUBLISH_TIME is greater than 0 and the time has passed since the last publish
-    if (currentValue != newValue || (MIN_PUBLISH_TIME > 0 && (currentTime - lastPublishTime) >= (static_cast<unsigned long>(MIN_PUBLISH_TIME) * 1000UL))) {
+    if (currentValue != newValue || (min_publish_time > 0 && (currentTime - lastPublishTime) >= (static_cast<unsigned long>(min_publish_time) * 1000UL))) {
         if (debug_flg) {
             DEBUG_PRINT(topic + ": ");
             if (decimals >= 0)

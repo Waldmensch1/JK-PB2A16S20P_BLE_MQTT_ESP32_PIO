@@ -7,6 +7,8 @@
 #include "macros.h"
 
 extern uint16_t publish_delay;
+extern uint16_t min_publish_time;
+
 extern bool debug_flg;
 extern bool debug_flg_full_log;
 

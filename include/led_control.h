@@ -2,7 +2,8 @@
 #define LED_CONTROL_H
 #include <Arduino.h>
 
-#define LED_PIN 2
+#ifdef USELED
+#define LED_PIN USELED
 
 enum LedState {
     LED_OFF,
@@ -15,5 +16,6 @@ enum LedState {
 
 void init_led();
 void set_led(LedState state);
+#endif //USELED
 
 #endif // LED_CONTROL_H

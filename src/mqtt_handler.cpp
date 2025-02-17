@@ -9,14 +9,14 @@ const char *mqtt_server = MQTT_SERVER;
 const int mqtt_port = MQTT_PORT;
 const char *mqtt_username = MQTT_USERNAME;
 const char *mqtt_passwort = MQTT_PASSWORD;
-const char *mqtt_devicename = DEVICENAME;
-String mqtt_main_topic = String("jk_ble_listener/");
+const char *mqtt_devicename = MQTT_CLTNAME;
+String mqtt_main_topic = String(TOPIC_BASE);
 String mqttname = mqtt_main_topic + mqtt_devicename;
 
 long lastReconnectAttempt = 0;
 long mqttpublishtime_offset = 1000;
 
-String willTopic = String("jk_ble_listener/") + String(mqtt_devicename) + String("/status/status");
+String willTopic = mqttname + String("/status/status");
 String willMessage = "offline";
 byte willQoS = 0;
 boolean willRetain = true;
@@ -46,8 +46,8 @@ void handleMQTTSettingsMessage(const char *topic, const char *command, byte *pay
                 payloadStr[length] = '\0';
 
                 uint16_t value = atoi(payloadStr);
-                Serial.print("Converted value: ");
-                Serial.println(value);
+                DEBUG_PRINT("Converted value: ");
+                DEBUG_PRINTLN(value);
                 write_setting(command, value);
             } else {
                 mqtt_client.publish(String(topic).c_str(), String(0).c_str());
@@ -92,7 +92,7 @@ boolean reconnect() {
     String random_client_id = mqtt_devicename;
 #endif
 
-    Serial.println("Attempting MQTT connection... " + random_client_id);
+    DEBUG_PRINTLN("Attempting MQTT connection... " + random_client_id);
 
     // Attempt to reconnect to the MQTT broker
     if (mqtt_client.connect(random_client_id.c_str(), mqtt_username, mqtt_passwort, willTopic.c_str(), willQoS, willRetain, willMessage.c_str())) {
@@ -116,8 +116,10 @@ boolean reconnect() {
         mqtt_client.publish((mqttname + "/status/status").c_str(), String("online").c_str(), true);
         mqtt_client.publish((mqttname + "/status/ipaddress").c_str(), WiFi.localIP().toString().c_str());
 
+#ifdef USELED
         // Send LED_ON state to the LED task
         set_led(LedState::LED_FLASH);
+#endif
     }
 
     return mqtt_client.connected();
@@ -126,16 +128,16 @@ boolean reconnect() {
 // MQTT Check
 void mqtt_loop() {
     if (!mqtt_client.connected()) {
-        Serial.println("MQTT mqtt_client not connected, attempting to reconnect...");
+        DEBUG_PRINTLN("MQTT mqtt_client not connected, attempting to reconnect...");
         long now = millis();
         if (now - lastReconnectAttempt > RECONNECT_DELAY) { // 5 seconds delay
 
             lastReconnectAttempt = now;
             if (reconnect()) {
                 lastReconnectAttempt = 0;
-                Serial.println("MQTT Reconnected.");
+                DEBUG_PRINTLN("MQTT Reconnected.");
             } else {
-                Serial.println("MQTT Reconnect failed.");
+                DEBUG_PRINTLN("MQTT Reconnect failed.");
                 // lastReconnectAttempt = 0;
             }
         }
@@ -145,10 +147,10 @@ void mqtt_loop() {
 }
 
 void mqtt_init() {
-    Serial.println("Connecting MQTT ...");
+    DEBUG_PRINTLN("Connecting MQTT ...");
     if (reconnect()) {
-        Serial.println("MQTT Connected.");
+        DEBUG_PRINTLN("MQTT Connected.");
         mqtt_client.publish((mqttname + "/status/status").c_str(), String("online").c_str(), true);
     } else
-        Serial.println("MQTT Connect failed.");
+        DEBUG_PRINTLN("MQTT Connect failed.");
 }

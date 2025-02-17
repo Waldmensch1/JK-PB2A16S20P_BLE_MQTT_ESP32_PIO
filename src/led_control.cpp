@@ -1,5 +1,6 @@
 #include "led_control.h"
 
+#ifdef USELED
 // Create a queue for LED states
 QueueHandle_t ledQueue;
 
@@ -73,3 +74,4 @@ void init_led() {
 void set_led(LedState state) {
     xQueueSend(ledQueue, &state, portMAX_DELAY);
 }
+#endif //USELED

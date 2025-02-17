@@ -37,17 +37,17 @@ unsigned long last_ble_scan_time = 0;
 unsigned long last_data_received_time = 0;
 
 void parser01(void *message) {
-    Serial.println("Parser1");
+    DEBUG_PRINTLN("Parser1");
     readConfigDataRecord(message, devicename);
 }
 
 void parser02(void *message) {
-    Serial.println("Parser2");
+    DEBUG_PRINTLN("Parser2");
     readCellDataRecord(message, devicename);
 }
 
 void parser03(void *message) {
-    Serial.println("Parser3");
+    DEBUG_PRINTLN("Parser3");
     readDeviceDataRecord(message, devicename);
 }
 
@@ -67,19 +67,19 @@ void parser(void *message) {
         parser03(message);
         break;
     default:
-        Serial.println("Unbekannter Typ in message[3]!");
+        DEBUG_PRINTLN("Unbekannter Typ in message[3]!");
         break;
     }
 }
 
 class MyClientCallback : public NimBLEClientCallbacks {
     void onConnect(NimBLEClient *pclient) {
-        Serial.println("Connected");
+        DEBUG_PRINTLN("Connected");
         ble_connected = true;
     }
 
     void onDisconnect(NimBLEClient *pclient) {
-        Serial.println("Disconnected");
+        DEBUG_PRINTLN("Disconnected");
         ble_connected = false;
         ESP.restart();
     }
@@ -87,12 +87,12 @@ class MyClientCallback : public NimBLEClientCallbacks {
 
 class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
     void onResult(NimBLEAdvertisedDevice *advertisedDevice) {
-        Serial.print("BLE Advertised Device found: ");
-        Serial.println(advertisedDevice->toString().c_str());
+        DEBUG_PRINT("BLE Advertised Device found: ");
+        DEBUG_PRINTLN(advertisedDevice->toString().c_str());
 
         // We have found a device, let us now see if it contains the service we are looking for.
         if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(NimBLEUUID(serviceUUID)) && advertisedDevice->getName() == devicename) {
-            Serial.println("Found our server " + String(devicename));
+            DEBUG_PRINTLN("Found our server " + String(devicename));
             pBLEScan->stop();
             myDevice = advertisedDevice;
             do_connect = true;
@@ -103,12 +103,12 @@ class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
 
 void notifyCallback(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify) {
 
-    // Serial.print("Notification received: ");
+    // DEBUG_PRINT("Notification received: ");
     // for (size_t i = 0; i < length; i++) {
-    //     Serial.print(pData[i], HEX);
-    //     Serial.print(" ");
+    //     DEBUG_PRINT(pData[i], HEX);
+    //     DEBUG_PRINT(" ");
     // }
-    // Serial.println();
+    // DEBUG_PRINTLN();
 
     std::lock_guard<std::mutex> lock(bufferMutex);
     last_received_notification = millis(); // Zeitstempel aktualisieren
@@ -126,7 +126,7 @@ void notifyCallback(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *
                 ble_buffer[ble_buffer_index++] = byte;
             } else if (ble_buffer_index == 3 && byte == 0x90) {
                 ble_buffer[ble_buffer_index++] = byte;
-                Serial.println("Startsequence detected! Message type: " + String(ble_buffer[ble_buffer_index]));
+                DEBUG_PRINTLN("Startsequence detected! Message type: " + String(ble_buffer[ble_buffer_index]));
                 capturing = true; // from now on, data will be stored in buffer
             } else {
                 ble_buffer_index = 0; // no start sequence detected, reset buffer
@@ -144,7 +144,7 @@ void notifyCallback(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *
                 last_data_received_time = millis();
 
                 // .. and call parser
-                Serial.println("Calling parser");
+                DEBUG_PRINTLN("Calling parser");
                 parser(static_cast<void *>(message.data()));
             }
         }
@@ -152,8 +152,8 @@ void notifyCallback(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *
 }
 
 bool connectToBLEServer() {
-    Serial.print("Forming a connection to ");
-    Serial.println(myDevice->getAddress().toString().c_str());
+    DEBUG_PRINT("Forming a connection to ");
+    DEBUG_PRINTLN(myDevice->getAddress().toString().c_str());
 
     pClient->setClientCallbacks(new MyClientCallback());
     delay(500);
@@ -164,48 +164,50 @@ bool connectToBLEServer() {
         mqtt_client.publish((mqttname + "/status/ble_device_mac").c_str(), myDevice->getAddress().toString().c_str());
         mqtt_client.publish((mqttname + "/status/ble_device_rssi").c_str(), String(myDevice->getRSSI()).c_str());
 
-        Serial.println(" - Connected to server");
+        DEBUG_PRINTLN(" - Connected to server");
 
         // Obtain a reference to the service we are after in the remote BLE server.
         NimBLERemoteService *pRemoteService = pClient->getService(NimBLEUUID(serviceUUID));
         if (pRemoteService == nullptr) {
-            Serial.print("Failed to find our service UUID: ");
-            Serial.println(serviceUUID.toString().c_str());
+            DEBUG_PRINT("Failed to find our service UUID: ");
+            DEBUG_PRINTLN(serviceUUID.toString().c_str());
             pClient->disconnect();
             return false;
         }
-        Serial.println(" - Found our service");
+        DEBUG_PRINTLN(" - Found our service");
 
         // Obtain a reference to the characteristic in the service of the remote BLE server.
         pRemoteCharacteristic = pRemoteService->getCharacteristic(NimBLEUUID(charUUID));
         if (pRemoteCharacteristic == nullptr) {
-            Serial.print("Failed to find our characteristic UUID: ");
-            Serial.println(charUUID.toString().c_str());
+            DEBUG_PRINT("Failed to find our characteristic UUID: ");
+            DEBUG_PRINTLN(charUUID.toString().c_str());
             pClient->disconnect();
             return false;
         }
-        Serial.println(" - Found our characteristic");
+        DEBUG_PRINTLN(" - Found our characteristic");
 
         // Set the notification callback
         if (pRemoteCharacteristic->canNotify()) {
             pRemoteCharacteristic->subscribe(true, notifyCallback);
-            Serial.println("Subscribed to notifications");
+            DEBUG_PRINTLN("Subscribed to notifications");
         }
 
         // Sending getdevice info
         pRemoteCharacteristic->writeValue(getdeviceInfo, 20);
         initial_send_done = false;
         last_sending_time = millis();
-        Serial.println("Sending device Info");
+        DEBUG_PRINTLN("Sending device Info");
 
         mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "connected");
 
+#ifdef USELED
         // Send LED_BLINK_SLOW state to the LED task
         set_led(LedState::LED_BLINK_SLOW);
+#endif
 
         return true;
     } else {
-        Serial.println(" - Failed to connect to server");
+        DEBUG_PRINTLN(" - Failed to connect to server");
         mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "failed");
         return false;
     }
@@ -214,17 +216,19 @@ bool connectToBLEServer() {
 void ble_loop() {
     // BLE not connected
     if (!ble_connected && !do_connect && (millis() - last_ble_scan_time) > SCAN_REPEAT_TIME) {
-        Serial.println("BLE -> Scanning ... " + String(count_ble_scans));
+        DEBUG_PRINTLN("BLE -> Scanning ... " + String(count_ble_scans));
         mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), String("scanning " + String(count_ble_scans)).c_str());
         last_ble_scan_time = millis();
         if (pBLEScan != nullptr) {
             pBLEScan->start(5, false);
 
+#ifdef USELED
             // Send LED_BLINK_FAST state to the LED task
             set_led(LedState::LED_BLINK_FAST);
+#endif
 
         } else {
-            Serial.println("Error: pBLEScan is NULL");
+            DEBUG_PRINTLN("Error: pBLEScan is NULL");
         }
         count_ble_scans++;
     }
@@ -234,19 +238,19 @@ void ble_loop() {
         ble_connected = false;
         delay(200);
         mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "terminated");
-        Serial.println("BLE-Disconnect/terminated");
+        DEBUG_PRINTLN("BLE-Disconnect/terminated");
         last_data_received_time = millis();
         if (pClient != nullptr) {
             pClient->disconnect();
         } else {
-            Serial.println("Error: pClient is NULL");
+            DEBUG_PRINTLN("Error: pClient is NULL");
         }
     }
 
     // ESP restart after REBOOT_AFTER_BLE_RETRY BLE Scans without success
     if (count_ble_scans > REBOOT_AFTER_BLE_RETRY) {
         mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "rebooting");
-        Serial.println("BLE not receiving new Data from BMS... and no BLE reconnection possible, Reboot ESP...");
+        DEBUG_PRINTLN("BLE not receiving new Data from BMS... and no BLE reconnection possible, Reboot ESP...");
         ESP.restart();
     }
 
@@ -256,10 +260,10 @@ void ble_loop() {
         if (currentMillis - last_ble_connection_attempt_time >= BLE_RECONNECT) {
             last_ble_connection_attempt_time = currentMillis;
             if (connectToBLEServer()) {
-                Serial.println("We are now connected to the BLE Server.");
+                DEBUG_PRINTLN("We are now connected to the BLE Server.");
                 do_connect = false;
             } else {
-                Serial.println("Failed to connect to the BLE Server.");
+                DEBUG_PRINTLN("Failed to connect to the BLE Server.");
             }
         }
     }
@@ -270,7 +274,7 @@ void ble_loop() {
         if (!initial_send_done) {
             // Initial send after 5 seconds
             if ((millis() - last_sending_time) >= INITIAL_SEND_INTERVAL) {
-                Serial.println("Send getInfo (initial)");
+                DEBUG_PRINTLN("Send getInfo (initial)");
                 pRemoteCharacteristic->writeValue(getInfo, 20);
                 last_sending_time = millis(); // Update the last sending time to the current time
                 initial_send_done = true;     // Set the flag to indicate the initial send is done
@@ -278,7 +282,7 @@ void ble_loop() {
         } else {
             // Subsequent sends every hour
             if ((millis() - last_sending_time) >= REPEAT_SEND_INTERVAL) {
-                Serial.println("Send getInfo (hourly)");
+                DEBUG_PRINTLN("Send getInfo (hourly)");
                 pRemoteCharacteristic->writeValue(getInfo, 20);
                 last_sending_time = millis(); // Update the last sending time to the current time
             }
@@ -296,7 +300,7 @@ void bufferTimeoutCheck() {
             // Timeout reached
             ble_buffer_index = 0;
             capturing = false;
-            Serial.println("Notfication Timeout reached! Buffer reset.");
+            DEBUG_PRINTLN("Notfication Timeout reached! Buffer reset.");
         }
     }
 }
@@ -305,7 +309,7 @@ void ble_setup() {
     NimBLEDevice::init("");
     pClient = NimBLEDevice::createClient();
     pClient->setClientCallbacks(new MyClientCallback());
-    Serial.println("BLE client started");
+    DEBUG_PRINTLN("BLE client started");
 
     pBLEScan = NimBLEDevice::getScan();
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());

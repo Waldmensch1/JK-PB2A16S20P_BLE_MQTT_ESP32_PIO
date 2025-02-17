@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <nvs_flash.h>
+#include "macros.h"
 
 extern uint16_t publish_delay;
 extern bool debug_flg;

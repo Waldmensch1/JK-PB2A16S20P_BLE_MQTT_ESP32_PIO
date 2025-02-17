@@ -28,7 +28,7 @@ void init_rs485() {
     pinMode(RE_PIN, OUTPUT);
     digitalWrite(DE_PIN, LOW); // Enable receiver
     digitalWrite(RE_PIN, LOW); // Enable receiver
-    Serial.println("RS485 Serial initialized");
+    DEBUG_PRINTLN("RS485 Serial initialized");
 
     rs485_send(message2, sizeof(message2));
 }
@@ -62,14 +62,14 @@ void rs485_loop() {
             memcpy(freshArray, buffer, receivedLength);
 
             // Process the fresh array
-            Serial.print("Received data: ");
+            DEBUG_PRINT("Received data: ");
             for (int i = 0; i < receivedLength; i++) {
-                Serial.print(freshArray[i], HEX);
+                DEBUG_PRINT(freshArray[i], HEX);
                 if (i < receivedLength - 1) {
-                    Serial.print(",");
+                    DEBUG_PRINT(",");
                 }
             }
-            Serial.println();
+            DEBUG_PRINTLN();
         }
 
         // Reset the buffer

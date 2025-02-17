@@ -9,11 +9,14 @@
 #include "config.h"
 #include "settings.h"
 #include "led_control.h"
+#include "macros.h"
 
 void mqtt_loop();
 void mqtt_init();
 
 // MQTT Setting
+// MQTT Client name used when connecting to broker
+#define MQTT_CLTNAME TEXTIFY(CLTNAME)
 extern String mqttname;
 extern String mqtt_main_topic;
 extern long mqttpublishtime_offset;

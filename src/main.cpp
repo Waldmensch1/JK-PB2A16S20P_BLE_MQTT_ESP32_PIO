@@ -1,19 +1,22 @@
 #include "main.h"
 
 void setup() {
+#ifdef SERIAL_OUT
     Serial.begin(115200);
-
+#endif
     init_settings();
 
-    Serial.println("");
-    Serial.println("");
-    Serial.print("JK-BMS Listener V ");
-    Serial.println(VERSION);
-    Serial.println("Starting");
+    DEBUG_PRINTLN("");
+    DEBUG_PRINTLN("");
+    DEBUG_PRINT("JK-BMS Listener V ");
+    DEBUG_PRINTLN(VERSION);
+    DEBUG_PRINTLN("Starting");
 
+#ifdef USELED
     init_led();
     // Send LED_FLASH state to the LED task
     set_led(LedState::LED_DOUBLE_FLASH);
+#endif
 
     // WIFI Setup
     init_wifi();
@@ -33,7 +36,7 @@ void setup() {
 
 void loop() {
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("WIFI Connection is Lost! Try to Reconnect...");
+        DEBUG_PRINTLN("WIFI Connection is Lost! Try to Reconnect...");
         init_wifi();
     } else {
         mqtt_loop();

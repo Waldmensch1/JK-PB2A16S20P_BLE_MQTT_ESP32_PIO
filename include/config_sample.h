@@ -13,6 +13,9 @@
 #define MQTT_USERNAME ""
 #define MQTT_PASSWORD ""
 
+// MQTT Topic configuration
+#define TOPIC_BASE "jk_ble_listener/" // Base topic tree used for all MQTT communication; ATTN: must end with a "/"!
+
 // this attached a unique id to the mqtt client name. This is useful if 
 // you have multiple devices with the same name. It collides with the
 // retained messages on the broker, so last will messages are not working
@@ -22,7 +25,7 @@
 // reboot after BLE scans without success
 #define REBOOT_AFTER_BLE_RETRY 20
 
-// only publish every this seconds
+// only publish every this seconds (0 -> publish every change immediately)
 #define PUBLISH_DELAY 0
 
 // publish values also if they are not changed. 0 = off, n = seconds 

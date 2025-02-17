@@ -12,7 +12,7 @@ void write_setting(const char *setting_name, uint16_t value) {
     // Save the uint16_t value
     prefs.putUShort(setting_name, value);
     prefs.end();
-    Serial.println("Value for " + String(setting_name) + "  changed to  " + String(value));
+    DEBUG_PRINTLN("Value for " + String(setting_name) + "  changed to  " + String(value));
     re_read_settings();
 }
 
@@ -20,7 +20,7 @@ void write_setting(const char *setting_name, bool value) {
     prefs.begin("storage", false);
     prefs.putUChar(setting_name, value ? 1 : 0);
     prefs.end();
-    Serial.println("Value for " + String(setting_name) + "  changed to  " + String(value));
+    DEBUG_PRINTLN("Value for " + String(setting_name) + "  changed to  " + String(value));
     re_read_settings();
 }
 
@@ -28,7 +28,7 @@ uint16_t read_setting(const char *setting_name, uint16_t default_value) {
     prefs.begin("storage", true);
     uint16_t value = prefs.getUShort(setting_name, default_value);
     prefs.end();
-    Serial.println("Read Value for " + String(setting_name) + " is " + String(value));
+    DEBUG_PRINTLN("Read Value for " + String(setting_name) + " is " + String(value));
     return value;
 }
 
@@ -36,7 +36,7 @@ bool read_setting(const char *setting_name, bool default_value) {
     prefs.begin("storage", true);
     bool value = prefs.getUChar(setting_name, default_value ? 1 : 0) == 1;
     prefs.end();
-    Serial.println("Read Value for " + String(setting_name) + " is " + String(value));
+    DEBUG_PRINTLN("Read Value for " + String(setting_name) + " is " + String(value));
     return value;
 }
 
@@ -44,13 +44,13 @@ void re_read_settings() {
     publish_delay = read_setting("publish_delay", (uint16_t)PUBLISH_DELAY);
     // Limit to 1000 seconds as sometimes the value is corrupted 0xFFFF
     publish_delay = publish_delay > 1000 ? (uint16_t)PUBLISH_DELAY : publish_delay;
-    Serial.println("Re-Read Value for publish_delay is " + String(publish_delay));
+    DEBUG_PRINTLN("Re-Read Value for publish_delay is " + String(publish_delay));
 
     debug_flg = read_setting("debug_flg", false);
-    Serial.println("Re-Read Value for debug_flg is " + String(debug_flg));
+    DEBUG_PRINTLN("Re-Read Value for debug_flg is " + String(debug_flg));
 
     debug_flg_full_log = read_setting("debug_flg_full_log", false);
-    Serial.println("Re-Read Value for debug_flg_full_log is " + String(debug_flg_full_log));
+    DEBUG_PRINTLN("Re-Read Value for debug_flg_full_log is " + String(debug_flg_full_log));
 }
 
 void init_settings() {

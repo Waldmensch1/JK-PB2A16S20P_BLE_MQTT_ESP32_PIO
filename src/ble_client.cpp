@@ -36,8 +36,10 @@ unsigned long last_ble_connection_attempt_time = 0;
 unsigned long last_ble_scan_time = 0;
 unsigned long last_data_received_time = 0;
 
+#ifdef DUALCORE
 // Define the queue handle
 QueueHandle_t bleQueue;
+#endif
 
 void parser01(void *message) {
     DEBUG_PRINTLN("Parser1");
@@ -148,12 +150,14 @@ void notifyCallback(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *
 
                 // .. and call parser
                 DEBUG_PRINTLN("Calling parser");
-                //parser(static_cast<void *>(message.data()));
-
+#ifdef DUALCORE
                 // Add message to queue
                 if (xQueueSend(bleQueue, message.data(), portMAX_DELAY) != pdTRUE) {
                     DEBUG_PRINTLN("Failed to send message to queue");
                 }
+#else
+                parser(static_cast<void *>(message.data()));
+#endif
             }
         }
     }
@@ -313,6 +317,7 @@ void bufferTimeoutCheck() {
     }
 }
 
+#ifdef DUALCORE
 // Define the BLE client task
 void bleClientTask(void *pvParameters) {
     NimBLEDevice::init("");
@@ -346,8 +351,11 @@ void parserTask(void *pvParameters) {
         }
     }
 }
+#endif
 
 void ble_setup() {
+
+#ifdef DUALCORE
     // Create the queue
     bleQueue = xQueueCreate(10, sizeof(uint8_t[BUFFER_SIZE]));
     DEBUG_PRINTLN("ble queue created");
@@ -359,6 +367,23 @@ void ble_setup() {
     // Create the parser task on core 0
     xTaskCreatePinnedToCore(parserTask, "Parser Task", 4096, NULL, 1, NULL, 0);
     DEBUG_PRINTLN("Parser Task created");
+
+#else
+
+    NimBLEDevice::init("");
+    pClient = NimBLEDevice::createClient();
+    pClient->setClientCallbacks(new MyClientCallback());
+    DEBUG_PRINTLN("BLE client started");
+
+    pBLEScan = NimBLEDevice::getScan();
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    pBLEScan->setInterval(1349);
+    pBLEScan->setWindow(449);
+    pBLEScan->setActiveScan(true);
+
+    DEBUG_PRINTLN("Scan for our Server " + String(devicename));
+
+#endif
 
     // start timeout check in separate thread
     xTaskCreatePinnedToCore(

@@ -36,6 +36,9 @@ unsigned long last_ble_connection_attempt_time = 0;
 unsigned long last_ble_scan_time = 0;
 unsigned long last_data_received_time = 0;
 
+// Define the queue handle
+QueueHandle_t bleQueue;
+
 void parser01(void *message) {
     DEBUG_PRINTLN("Parser1");
     readConfigDataRecord(message, devicename);
@@ -145,7 +148,12 @@ void notifyCallback(NimBLERemoteCharacteristic *pRemoteCharacteristic, uint8_t *
 
                 // .. and call parser
                 DEBUG_PRINTLN("Calling parser");
-                parser(static_cast<void *>(message.data()));
+                //parser(static_cast<void *>(message.data()));
+
+                // Add message to queue
+                if (xQueueSend(bleQueue, message.data(), portMAX_DELAY) != pdTRUE) {
+                    DEBUG_PRINTLN("Failed to send message to queue");
+                }
             }
         }
     }
@@ -305,7 +313,8 @@ void bufferTimeoutCheck() {
     }
 }
 
-void ble_setup() {
+// Define the BLE client task
+void bleClientTask(void *pvParameters) {
     NimBLEDevice::init("");
     pClient = NimBLEDevice::createClient();
     pClient->setClientCallbacks(new MyClientCallback());
@@ -316,6 +325,40 @@ void ble_setup() {
     pBLEScan->setInterval(1349);
     pBLEScan->setWindow(449);
     pBLEScan->setActiveScan(true);
+
+    DEBUG_PRINTLN("Scan for our Server " + String(devicename));
+
+    // Keep the task running
+    while (true) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+// Define the parser task
+void parserTask(void *pvParameters) {
+    uint8_t message[BUFFER_SIZE];
+
+    while (true) {
+        // Receive data from the queue
+        if (xQueueReceive(bleQueue, &message, portMAX_DELAY) == pdTRUE) {
+            // Call the parser function
+            parser(message);
+        }
+    }
+}
+
+void ble_setup() {
+    // Create the queue
+    bleQueue = xQueueCreate(10, sizeof(uint8_t[BUFFER_SIZE]));
+    DEBUG_PRINTLN("ble queue created");
+
+    // Create the BLE client task on core 1
+    xTaskCreatePinnedToCore(bleClientTask, "BLE Client Task", 8192, NULL, 1, NULL, 1);
+    DEBUG_PRINTLN("BLE Client Task created");
+
+    // Create the parser task on core 0
+    xTaskCreatePinnedToCore(parserTask, "Parser Task", 4096, NULL, 1, NULL, 0);
+    DEBUG_PRINTLN("Parser Task created");
 
     // start timeout check in separate thread
     xTaskCreatePinnedToCore(

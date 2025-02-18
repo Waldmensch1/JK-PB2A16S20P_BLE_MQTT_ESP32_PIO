@@ -4,6 +4,7 @@
 #define MQTT 0
 
 unsigned long lastPublishTime = 0;
+bool first_run = true;
 
 uint8_t counter_last = 0;
 uint32_t cells_used = 0;
@@ -376,12 +377,13 @@ void readCellDataRecord(void *message, const char *devicename) {
     unsigned long timeDiff = currentTime - lastPublishTime;
     // mqtt_client.publish((str_base_topic + "/debug/timeDiff").c_str(), String(timeDiff).c_str());
 
-    if (publish_delay > 0 && (currentTime - lastPublishTime) < (publish_delay * 1000)) {
+    if (!first_run && (publish_delay > 0 && (currentTime - lastPublishTime) < (publish_delay * 1000))) {
         // mqtt_client.publish((str_base_topic + "/debug/indelay").c_str(), "true");
         //  Do nothing if the delay has not passed
         // blocked_for_parsing = false;
         return;
     }
+    first_run = false;
 
     // Update the last publish time
     lastPublishTime = currentTime;

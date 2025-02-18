@@ -31,6 +31,7 @@ float temp_sensor2[2] = {0, 0};
 float temp_sensor3[2] = {0, 0};
 float temp_sensor4[2] = {0, 0};
 float temp_sensor5[2] = {0, 0};
+uint32_t alarm_raw[2] = {0xFFFFFFFF, 0xFFFFFFFF};
 uint32_t alarms_mask[2] = {0xFFFFFFFF, 0xFFFFFFFF};
 
 String alarmStrings[24] = {
@@ -590,6 +591,8 @@ void readCellDataRecord(void *message, const char *devicename) {
 #endif
 
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
+    publishIfChanged(alarm_raw[MQTT], uint32_t_value, str_base_topic + "/data/alarms/alarm_raw");
+    
     if (uint32_t_value != alarms_mask[MQTT] || alarms_mask[MQTT] == 0xFFFFFFFF) {
 
         if (debug_flg) {

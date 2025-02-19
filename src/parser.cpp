@@ -60,7 +60,7 @@ String alarmStrings[24] = {
     "TemperatureSensorAnomaly",
     "PLCModuleAnomaly"};
 
-float balance_current[2] = {10000, 10000};
+int16_t balance_current[2] = {10000, 10000};
 byte balancing_action[2] = {255, 255};
 uint8_t battery_soc[2] = {0, 0};
 float battery_capacity_remaining[2] = {0, 0};
@@ -639,8 +639,8 @@ void readCellDataRecord(void *message, const char *devicename) {
         alarms_mask[MQTT] = uint32_t_value;
     }
 
-    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.1;
-    publishIfChanged(balance_current[MQTT], fl_value, str_base_topic + "/data/balance_current");
+    int16_t int16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8); // mA
+    publishIfChanged(balance_current[MQTT], int16_t_value, str_base_topic + "/data/balance_current");
 
     byte_value = receivedBytes_cell[index++];
     publishIfChanged(balancing_action[MQTT], byte_value, str_base_topic + "/data/balancing_action");

@@ -1,5 +1,10 @@
 #include "main.h"
 
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 3600;  // Deutschland: MEZ (UTC+1)
+const int   daylightOffset_sec = 3600;  // Sommerzeit (UTC+2)
+
+
 void setup() {
 #ifdef SERIAL_OUT
     Serial.begin(115200);
@@ -20,6 +25,11 @@ void setup() {
 
     // WIFI Setup
     init_wifi();
+
+    // Get the current time
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    DEBUG_PRINTLN("NTP-Time synced");
+
     mqtt_init();
 
 #ifdef USE_RS485

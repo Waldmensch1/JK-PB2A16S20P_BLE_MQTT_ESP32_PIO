@@ -4,7 +4,15 @@
 #define MQTT 0
 
 unsigned long lastPublishTime = 0;
+unsigned long lastDataReceivedTime = 0;
 bool first_run = true;
+
+// variables for charge/discharge / day calculation
+float Q_charged = 0;    // charge in As
+float Q_discharged = 0; // discharge in As
+
+float Q_charged_mAh_old[2] = {0.0};
+float Q_discharged_mAh_old[2] = {0.0};
 
 uint8_t counter_last = 0;
 uint32_t cells_used = 0;
@@ -378,6 +386,21 @@ void readCellDataRecord(void *message, const char *devicename) {
     unsigned long timeDiff = currentTime - lastPublishTime;
     // mqtt_client.publish((str_base_topic + "/debug/timeDiff").c_str(), String(timeDiff).c_str());
 
+    float deltaT = (currentTime - lastDataReceivedTime) / 1000.0; // time in seconds
+    lastDataReceivedTime = currentTime;
+    // actual charge current
+    float_t curent = (receivedBytes_cell[158] | receivedBytes_cell[159] << 8 | receivedBytes_cell[160] << 16 | receivedBytes_cell[161] << 24) * 0.001;
+
+    // Integration of charge/discharge current
+    if (curent > 0) {
+        Q_charged += curent * deltaT;
+    } else {
+        Q_discharged += (-curent) * deltaT;
+    }
+    // to mAh
+    float Q_charged_mAh = Q_charged / 3.6;
+    float Q_discharged_mAh = Q_discharged / 3.6;
+
     if (!first_run && (publish_delay > 0 && (currentTime - lastPublishTime) < (publish_delay * 1000))) {
         // mqtt_client.publish((str_base_topic + "/debug/indelay").c_str(), "true");
         //  Do nothing if the delay has not passed
@@ -405,6 +428,9 @@ void readCellDataRecord(void *message, const char *devicename) {
     str_topic = String(str_base_topic + "/data/readcount");
     str_value = String(counter);
     mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+
+    publishIfChanged(Q_charged_mAh_old[MQTT], Q_charged_mAh, str_base_topic + "/data/battery_charged_mAh", 3);
+    publishIfChanged(Q_discharged_mAh_old[MQTT], Q_discharged_mAh, str_base_topic + "/data/battery_discharged_mAh", 3);
 
     if (debug_flg_full_log) {
         uint16_t inputLength = sizeof(receivedBytes_cell);
@@ -558,7 +584,8 @@ void readCellDataRecord(void *message, const char *devicename) {
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
     publishIfChanged(battery_power[MQTT], fl_value, str_base_topic + "/data/battery_power");
 
-    // battery_charge_current
+    // index 158
+    //  battery_charge_current
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
     publishIfChanged(battery_charge_current[MQTT], fl_value, str_base_topic + "/data/battery_charge_current");
 #ifdef INFLUX_BATTERY_CURRENT
@@ -592,7 +619,7 @@ void readCellDataRecord(void *message, const char *devicename) {
 
     uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
     publishIfChanged(alarm_raw[MQTT], uint32_t_value, str_base_topic + "/data/alarms/alarm_raw");
-    
+
     if (uint32_t_value != alarms_mask[MQTT] || alarms_mask[MQTT] == 0xFFFFFFFF) {
 
         if (debug_flg) {

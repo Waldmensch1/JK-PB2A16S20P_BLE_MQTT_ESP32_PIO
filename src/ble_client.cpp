@@ -35,6 +35,7 @@ unsigned long last_sending_time = 0;
 unsigned long last_ble_connection_attempt_time = 0;
 unsigned long last_ble_scan_time = 0;
 unsigned long last_data_received_time = 0;
+unsigned long last_rssi_time = 0;
 
 #ifdef DUALCORE
 // Define the queue handle
@@ -173,8 +174,8 @@ bool connectToBLEServer() {
     // Connect to the remote BLE Server.
     if (pClient->connect(myDevice)) {
 
-        mqtt_client.publish((mqttname + "/status/ble_device_mac").c_str(), myDevice->getAddress().toString().c_str());
-        mqtt_client.publish((mqttname + "/status/ble_device_rssi").c_str(), String(myDevice->getRSSI()).c_str());
+        setState("ble_device_mac", String(myDevice->getAddress().toString().c_str()), true);
+        setState("ble_device_rssi", String(myDevice->getRSSI()).c_str(), true);
 
         DEBUG_PRINTLN(" - Connected to server");
 
@@ -210,7 +211,7 @@ bool connectToBLEServer() {
         last_sending_time = millis();
         DEBUG_PRINTLN("Sending device Info");
 
-        mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "connected");
+        setState("ble_connection", "connected", true);
 
 #ifdef USELED
         // Send LED_BLINK_SLOW state to the LED task
@@ -220,7 +221,7 @@ bool connectToBLEServer() {
         return true;
     } else {
         DEBUG_PRINTLN(" - Failed to connect to server");
-        mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "failed");
+        setState("ble_connection", "failed", true);
         return false;
     }
 }
@@ -229,7 +230,9 @@ void ble_loop() {
     // BLE not connected
     if (!ble_connected && !do_connect && (millis() - last_ble_scan_time) > SCAN_REPEAT_TIME) {
         DEBUG_PRINTLN("BLE -> Scanning ... " + String(count_ble_scans));
-        mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), String("scanning " + String(count_ble_scans)).c_str());
+
+        setState("ble_connection", String("scanning " + String(count_ble_scans)).c_str(), true);
+
         last_ble_scan_time = millis();
         if (pBLEScan != nullptr) {
             pBLEScan->start(5, false);
@@ -249,7 +252,7 @@ void ble_loop() {
     if (!do_connect && ble_connected && (millis() >= (last_data_received_time + TIMEOUT_NO_DATA)) && last_data_received_time != 0) {
         ble_connected = false;
         delay(200);
-        mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "terminated");
+        setState("ble_connection", "terminated", true);
         DEBUG_PRINTLN("BLE-Disconnect/terminated");
         last_data_received_time = millis();
         if (pClient != nullptr) {
@@ -261,7 +264,7 @@ void ble_loop() {
 
     // ESP restart after REBOOT_AFTER_BLE_RETRY BLE Scans without success
     if (count_ble_scans > REBOOT_AFTER_BLE_RETRY) {
-        mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), "rebooting");
+        setState("ble_connection", "rebooting", true);
         DEBUG_PRINTLN("BLE not receiving new Data from BMS... and no BLE reconnection possible, Reboot ESP...");
         ESP.restart();
     }
@@ -298,6 +301,11 @@ void ble_loop() {
                 pRemoteCharacteristic->writeValue(getInfo, 20);
                 last_sending_time = millis(); // Update the last sending time to the current time
             }
+        }
+        
+        if (last_rssi_time == 0 || (millis() - last_rssi_time) >= RSSI_INTERVAL) {
+            last_rssi_time = millis();
+            setState("ble_device_rssi", String(myDevice->getRSSI()).c_str(), true);
         }
     }
 }

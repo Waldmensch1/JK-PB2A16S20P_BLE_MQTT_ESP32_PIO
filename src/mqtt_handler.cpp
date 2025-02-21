@@ -1,5 +1,5 @@
 #include "mqtt_handler.h"
-#include <rtc.h>
+//#include <rtc.h>
 
 constexpr unsigned long RECONNECT_DELAY = 5000;
 unsigned long lastReconnectAttempt = 0;
@@ -15,10 +15,56 @@ const char *mqtt_devicename = DEVICENAME;
 String mqtt_main_topic = String(TOPIC_BASE);
 String mqttname = mqtt_main_topic + mqtt_devicename;
 
+long mqttpublishtime_offset = 1000;
+
 String willTopic = mqttname + String("/status/status");
 String willMessage = "offline";
 byte willQoS = 0;
 boolean willRetain = true;
+
+// Define the map to store key-value pairs
+std::map<String, String> stateMap;
+
+String formatUptime(time_t uptime) {
+    int days = uptime / 86400;
+    int hours = (uptime % 86400) / 3600;
+    int minutes = (uptime % 3600) / 60;
+    int secs = uptime % 60;
+
+    char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%dd %02d:%02d:%02d", days, hours, minutes, secs);
+    return String(buffer);
+}
+
+
+void setState(String key, String value, bool publish) {
+    stateMap[key] = value;
+    String fullTopic = mqttname + "/status/" + key;
+    if (publish && mqtt_client.connected()) {
+        mqtt_client.publish(fullTopic.c_str(), value.c_str(), true);
+    }
+}
+
+void publishStates() {
+    for (const auto &kv : stateMap) {
+        String fullTopic = mqttname + "/status/" + kv.first;
+        mqtt_client.publish(fullTopic.c_str(), kv.second.c_str());
+    }
+}
+
+void publishStatesTask(void *pvParameters) {
+    while (true) {
+
+        time_t now = time(nullptr);  
+        time_t bootTime = now - esp_timer_get_time() / 1000000;  
+        setState("uptime", formatUptime(now - bootTime), false);
+
+        if (mqtt_client.connected()) {
+            publishStates();
+        }
+        vTaskDelay(min_publish_time * 1000 / portTICK_PERIOD_MS); // Delay for min_publish_time seconds
+    }
+}
 
 void handleMQTTSettingsMessage(const char *topic, const char *command, byte *payload, unsigned int length, bool &flag) {
     // Find the last occurrence of '/'
@@ -75,6 +121,7 @@ void MQTTCallback(char *topic, byte *payload, unsigned int length) {
     handleMQTTMessage(topic, (mqttname + "/parameter/debugging_active_full").c_str(), payload, length, debug_flg_full_log);
 
     handleMQTTMessage(topic, String("publish_delay").c_str(), payload, length, debug_flg_full_log, true);
+    handleMQTTMessage(topic, String("min_publish_time").c_str(), payload, length, debug_flg_full_log, true);
 }
 
 WiFiClient wifi_client;
@@ -95,13 +142,6 @@ boolean reconnect() {
 
     // Attempt to reconnect to the MQTT broker
     if (mqtt_client.connect(random_client_id.c_str(), mqtt_username, mqtt_passwort, willTopic.c_str(), willQoS, willRetain, willMessage.c_str())) {
-        // Once connected, publish an announcement...
-        if (millis() < 10000)
-            mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), String("startup").c_str());
-
-        mqtt_client.publish((mqttname + "/status/version").c_str(), String(VERSION).c_str());
-        // Publish reset reason after boot (see: https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/misc_system_api.html for possible reasons)
-        mqtt_client.publish((mqttname + "/status/reset_reason").c_str(), String(esp_reset_reason()).c_str());
 
         String debug_flg_status = debug_flg ? "true" : "false";
         mqtt_client.publish((mqttname + "/parameter/debugging_active").c_str(), debug_flg_status.c_str());
@@ -116,9 +156,6 @@ boolean reconnect() {
 
         mqtt_client.publish((mqttname + "/parameter/min_publish_time").c_str(), String(min_publish_time).c_str());
         mqtt_client.subscribe((mqttname + "/parameter/min_publish_time").c_str()); // min_publish_time
-
-        mqtt_client.publish((mqttname + "/status/status").c_str(), String("online").c_str(), true);
-        mqtt_client.publish((mqttname + "/status/ipaddress").c_str(), WiFi.localIP().toString().c_str());
 
 #ifdef USELED
         // Send LED_ON state to the LED task
@@ -146,6 +183,7 @@ void mqtt_loop() {
             }
         }
     } else {
+
         mqtt_client.loop();
     }
 }
@@ -154,7 +192,14 @@ void mqtt_init() {
     DEBUG_PRINTLN("Connecting MQTT ...");
     if (reconnect()) {
         DEBUG_PRINTLN("MQTT Connected.");
-        mqtt_client.publish((mqttname + "/status/status").c_str(), String("online").c_str(), true);
+        // Create the task to call publishStates() every min_publish_time seconds
+        xTaskCreate(publishStatesTask, "Publish States Task", 2048, NULL, 0, NULL);
+
+        setState("version", VERSION, true);
+        setState("ipaddress", WiFi.localIP().toString(), true);
+        setState("ble_connection", "startup", true);
+        setState("status", "online", true);
+
     } else
         DEBUG_PRINTLN("MQTT Connect failed.");
 }

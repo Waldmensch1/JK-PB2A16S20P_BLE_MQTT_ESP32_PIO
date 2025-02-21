@@ -21,6 +21,7 @@
 #define BUFFER_SIZE 300
 #define REPEAT_SEND_INTERVAL 3600000UL // Define the interval for sending data (1 hour)
 #define INITIAL_SEND_INTERVAL 5000UL   // Define the interval for the initial send (5 seconds)
+#define RSSI_INTERVAL 60000UL
 
 
 void ble_setup();

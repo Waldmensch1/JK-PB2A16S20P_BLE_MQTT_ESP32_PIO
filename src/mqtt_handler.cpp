@@ -1,5 +1,4 @@
 #include "mqtt_handler.h"
-//#include <rtc.h>
 
 constexpr unsigned long RECONNECT_DELAY = 5000;
 unsigned long lastReconnectAttempt = 0;
@@ -14,8 +13,6 @@ const char *mqtt_passwort = MQTT_PASSWORD;
 const char *mqtt_devicename = DEVICENAME;
 String mqtt_main_topic = String(TOPIC_BASE);
 String mqttname = mqtt_main_topic + mqtt_devicename;
-
-long mqttpublishtime_offset = 1000;
 
 String willTopic = mqttname + String("/status/status");
 String willMessage = "offline";
@@ -36,12 +33,11 @@ String formatUptime(time_t uptime) {
     return String(buffer);
 }
 
-
 void setState(String key, String value, bool publish) {
     stateMap[key] = value;
     String fullTopic = mqttname + "/status/" + key;
     if (publish && mqtt_client.connected()) {
-        mqtt_client.publish(fullTopic.c_str(), value.c_str(), true);
+        mqtt_client.publish(fullTopic.c_str(), value.c_str());
     }
 }
 
@@ -55,8 +51,8 @@ void publishStates() {
 void publishStatesTask(void *pvParameters) {
     while (true) {
 
-        time_t now = time(nullptr);  
-        time_t bootTime = now - esp_timer_get_time() / 1000000;  
+        time_t now = time(nullptr);
+        time_t bootTime = now - esp_timer_get_time() / 1000000;
         setState("uptime", formatUptime(now - bootTime), false);
 
         if (mqtt_client.connected()) {

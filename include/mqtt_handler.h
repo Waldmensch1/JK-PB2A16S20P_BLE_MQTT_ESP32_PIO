@@ -19,7 +19,6 @@ void mqtt_init();
 #define MQTT_CLTNAME TEXTIFY(CLTNAME)
 extern String mqttname;
 extern String mqtt_main_topic;
-extern long mqttpublishtime_offset;
 extern PubSubClient mqtt_client;
 
 #endif // MQTT_HANDLER_H

@@ -31,7 +31,11 @@
 // publish values also if they are not changed. 0 = off, n = seconds 
 #define MIN_PUBLISH_TIME 300
 
-
+// NTP Configuration
+#define NTPSERVER "pool.ntp.org" // NTP support disabled if not defined; may be IP or DNS name
+#define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3" // Germany Timezone including DST rules (see: https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html)
+//#define GMTOFFSET 3600  // OPTIONAL config w/o TIMEZONE (CET, UTC+1)
+//#define DLOFFSET 3600   // OPTIONAL config w/o TIMEZONE (CEST, UTC+2)
 
 //#define USE_INFLUXDB
 

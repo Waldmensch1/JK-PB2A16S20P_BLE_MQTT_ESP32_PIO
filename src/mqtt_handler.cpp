@@ -1,6 +1,8 @@
 #include "mqtt_handler.h"
+#include <rtc.h>
 
-constexpr long RECONNECT_DELAY = 5000;
+constexpr unsigned long RECONNECT_DELAY = 5000;
+unsigned long lastReconnectAttempt = 0;
 constexpr int MQTT_BUFFER_SIZE = 500;
 
 bool mqtt_buffer_maxed = false;
@@ -12,9 +14,6 @@ const char *mqtt_passwort = MQTT_PASSWORD;
 const char *mqtt_devicename = DEVICENAME;
 String mqtt_main_topic = String(TOPIC_BASE);
 String mqttname = mqtt_main_topic + mqtt_devicename;
-
-long lastReconnectAttempt = 0;
-long mqttpublishtime_offset = 1000;
 
 String willTopic = mqttname + String("/status/status");
 String willMessage = "offline";
@@ -101,7 +100,9 @@ boolean reconnect() {
             mqtt_client.publish((mqttname + "/status/ble_connection").c_str(), String("startup").c_str());
 
         mqtt_client.publish((mqttname + "/status/version").c_str(), String(VERSION).c_str());
-        
+        // Publish reset reason after boot (see: https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/misc_system_api.html for possible reasons)
+        mqtt_client.publish((mqttname + "/status/reset_reason").c_str(), String(esp_reset_reason()).c_str());
+
         String debug_flg_status = debug_flg ? "true" : "false";
         mqtt_client.publish((mqttname + "/parameter/debugging_active").c_str(), debug_flg_status.c_str());
         mqtt_client.subscribe((mqttname + "/parameter/debugging_active").c_str()); // debug_flg
@@ -132,7 +133,7 @@ boolean reconnect() {
 void mqtt_loop() {
     if (!mqtt_client.connected()) {
         DEBUG_PRINTLN("MQTT mqtt_client not connected, attempting to reconnect...");
-        long now = millis();
+        unsigned long now = millis();
         if (now - lastReconnectAttempt > RECONNECT_DELAY) { // 5 seconds delay
 
             lastReconnectAttempt = now;

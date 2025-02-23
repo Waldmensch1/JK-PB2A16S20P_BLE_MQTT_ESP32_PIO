@@ -7,6 +7,7 @@
 #include "rs485_handler.h"
 #include "led_control.h"
 #include "macros.h"
+#include "state_handler.h"
 #include <time.h>
 
 #ifdef USE_INFLUXDB

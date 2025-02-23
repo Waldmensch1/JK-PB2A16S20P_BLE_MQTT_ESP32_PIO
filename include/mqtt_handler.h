@@ -10,7 +10,6 @@
 #include "settings.h"
 #include "led_control.h"
 #include "macros.h"
-#include <map>
 
 void setState(String key, String value, bool publish);
 void mqtt_loop();

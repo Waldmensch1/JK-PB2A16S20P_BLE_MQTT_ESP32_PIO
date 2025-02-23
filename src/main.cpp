@@ -56,16 +56,12 @@ void setup() {
 }
 
 void loop() {
-    if (WiFi.status() != WL_CONNECTED) {
-        DEBUG_PRINTLN("WIFI Connection is Lost! Try to Reconnect...");
-        init_wifi();
-    } else {
-        mqtt_loop();
-
-        ble_loop();
+    wifi_loop();
+    state_handler();
+    mqtt_loop();
+    ble_loop();
 
 #ifdef USE_RS485
-        rs485_loop();
+    rs485_loop();
 #endif
-    }
 }

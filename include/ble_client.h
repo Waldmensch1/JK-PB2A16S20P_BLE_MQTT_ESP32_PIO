@@ -11,6 +11,7 @@
 #include "mqtt_handler.h"
 #include "parser.h"
 #include "led_control.h"
+#include "state_handler.h"
 
 #define BLE_RECONNECT 2000UL
 #define REBOOT_AFTER_BLE_RETRY 20

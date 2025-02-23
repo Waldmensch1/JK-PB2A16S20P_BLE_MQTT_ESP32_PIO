@@ -5,5 +5,6 @@
 #include <map>
 
 void state_handler();
+void setState(String key, String value, bool publish);
 
 #endif //STATE_HANDLER_H

@@ -11,7 +11,6 @@
 #include "led_control.h"
 #include "macros.h"
 
-void setState(String key, String value, bool publish);
 void mqtt_loop();
 void mqtt_init();
 

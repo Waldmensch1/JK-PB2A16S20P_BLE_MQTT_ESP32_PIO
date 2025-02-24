@@ -173,13 +173,13 @@ void mqtt_loop() {
             if (reconnect()) {
                 lastReconnectAttempt = 0;
                 DEBUG_PRINTLN("MQTT Reconnected.");
+                mqtt_client.loop();
             } else {
                 DEBUG_PRINTLN("MQTT Reconnect failed.");
                 // lastReconnectAttempt = 0;
             }
         }
     } else {
-
         mqtt_client.loop();
     }
 }

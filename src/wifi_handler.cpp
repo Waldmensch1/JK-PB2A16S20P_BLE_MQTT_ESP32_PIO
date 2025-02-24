@@ -28,3 +28,13 @@ void init_wifi() {
     DEBUG_PRINT("IP address: ");
     DEBUG_PRINTLN(WiFi.localIP());
 }
+
+void wifi_loop() {
+    if (WiFi.status() != WL_CONNECTED) {
+        DEBUG_PRINTLN("WiFi not connected, attempting to reconnect...");
+        init_wifi();
+        setState("ipaddress", WiFi.localIP().toString(), false);
+    } else {
+        setState("wifi_rssi", String(WiFi.RSSI()), false);
+    }
+}

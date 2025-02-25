@@ -31,6 +31,9 @@
 // publish values also if they are not changed. 0 = off, n = seconds 
 #define MIN_PUBLISH_TIME 300
 
+// Differential voltage publishing
+#define DIFFV_DIVIDER 1000 // Set to 1000 to get differential cell voltage in V or to 1 for mV
+
 // NTP Configuration
 #define NTPSERVER "pool.ntp.org" // NTP support disabled if not defined; may be IP or DNS name
 #define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3" // Germany Timezone including DST rules (see: https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html)

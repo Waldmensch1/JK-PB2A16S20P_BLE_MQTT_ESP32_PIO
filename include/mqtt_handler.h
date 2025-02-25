@@ -11,6 +11,9 @@
 #include "led_control.h"
 #include "macros.h"
 #include <map>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
 
 void setState(String key, String value, bool publish);
 void mqtt_loop();
@@ -22,5 +25,6 @@ void mqtt_init();
 extern String mqttname;
 extern String mqtt_main_topic;
 extern PubSubClient mqtt_client;
+extern SemaphoreHandle_t mqttMutex;
 
 #endif // MQTT_HANDLER_H

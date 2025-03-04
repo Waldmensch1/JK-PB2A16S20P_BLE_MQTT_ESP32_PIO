@@ -147,7 +147,7 @@ boolean mqtt_reconnect() {
     DEBUG_PRINTLN("Attempting MQTT connection... " + random_client_id);
 
     // Attempt to reconnect to the MQTT broker
-    if (mqtt_client.connect(random_client_id.c_str(), mqtt_username, mqtt_passwort, willTopic.c_str(), willQoS, willRetain, willMessage.c_str())) {
+    if (mqtt_client.connect(random_client_id.c_str(), mqtt_username, mqtt_passwort, willTopic.c_str(), willQoS, willRetain, willMessage.c_str(),true)) {
 
         int ErrorCnt = 0;
         String debug_flg_status = debug_flg ? "true" : "false";

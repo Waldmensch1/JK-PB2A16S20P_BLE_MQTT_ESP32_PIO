@@ -5,7 +5,7 @@
 #define INFLUXDB_HANDLER_H
 
 #include <Arduino.h>
-#include "config.h"
+#include "macros.h"
 
 void init_influxdb();
 void publishToInfluxDB(const String &topic, int value);

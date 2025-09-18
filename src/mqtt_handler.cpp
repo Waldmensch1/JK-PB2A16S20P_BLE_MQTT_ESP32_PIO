@@ -19,6 +19,9 @@ String willMessage = "offline";
 byte willQoS = 0;
 boolean willRetain = true;
 
+// Define the mutex
+SemaphoreHandle_t mqttMutex;
+
 // Define the map to store key-value pairs
 std::map<String, String> stateMap;
 
@@ -37,14 +40,21 @@ void setState(String key, String value, bool publish) {
     stateMap[key] = value;
     String fullTopic = mqttname + "/status/" + key;
     if (publish && mqtt_client.connected()) {
-        mqtt_client.publish(fullTopic.c_str(), value.c_str());
+        if (xSemaphoreTake(mqttMutex, portMAX_DELAY) == pdTRUE) {
+            mqtt_client.publish(fullTopic.c_str(), value.c_str());
+            xSemaphoreGive(mqttMutex);
+        }
     }
 }
 
 void publishStates() {
     for (const auto &kv : stateMap) {
         String fullTopic = mqttname + "/status/" + kv.first;
-        mqtt_client.publish(fullTopic.c_str(), kv.second.c_str());
+        if (xSemaphoreTake(mqttMutex, portMAX_DELAY) == pdTRUE) {
+            mqtt_client.publish(fullTopic.c_str(), kv.second.c_str());
+            xSemaphoreGive(mqttMutex);
+        }
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 
@@ -124,7 +134,7 @@ WiFiClient wifi_client;
 PubSubClient mqtt_client(mqtt_server, mqtt_port, MQTTCallback, wifi_client);
 
 // Reconnect to MQTT broker
-boolean reconnect() {
+boolean mqtt_reconnect() {
     mqtt_buffer_maxed = mqtt_client.setBufferSize(MQTT_BUFFER_SIZE);
 
 #ifdef USE_RANDOM_CLIENT_ID
@@ -137,28 +147,36 @@ boolean reconnect() {
     DEBUG_PRINTLN("Attempting MQTT connection... " + random_client_id);
 
     // Attempt to reconnect to the MQTT broker
-    if (mqtt_client.connect(random_client_id.c_str(), mqtt_username, mqtt_passwort, willTopic.c_str(), willQoS, willRetain, willMessage.c_str())) {
+    if (mqtt_client.connect(random_client_id.c_str(), mqtt_username, mqtt_passwort, willTopic.c_str(), willQoS, willRetain, willMessage.c_str(),true)) {
 
+        int ErrorCnt = 0;
         String debug_flg_status = debug_flg ? "true" : "false";
-        mqtt_client.publish((mqttname + "/parameter/debugging_active").c_str(), debug_flg_status.c_str());
-        mqtt_client.subscribe((mqttname + "/parameter/debugging_active").c_str()); // debug_flg
+        mqtt_client.publish((mqttname + "/parameter/debugging_active").c_str(), debug_flg_status.c_str()) || ErrorCnt++;
+        mqtt_client.subscribe((mqttname + "/parameter/debugging_active").c_str()) || ErrorCnt++; // debug_flg
 
         String debug_flg_full_log_status = debug_flg_full_log ? "true" : "false";
-        mqtt_client.publish((mqttname + "/parameter/debugging_active_full").c_str(), debug_flg_full_log_status.c_str());
-        mqtt_client.subscribe((mqttname + "/parameter/debugging_active_full").c_str()); // debug_flg_full_log
+        mqtt_client.publish((mqttname + "/parameter/debugging_active_full").c_str(), debug_flg_full_log_status.c_str()) || ErrorCnt++;
+        mqtt_client.subscribe((mqttname + "/parameter/debugging_active_full").c_str()) || ErrorCnt++; // debug_flg_full_log
 
-        mqtt_client.publish((mqttname + "/parameter/publish_delay").c_str(), String(publish_delay).c_str());
-        mqtt_client.subscribe((mqttname + "/parameter/publish_delay").c_str()); // debug_flg_full_log
+        mqtt_client.publish((mqttname + "/parameter/publish_delay").c_str(), String(publish_delay).c_str()) || ErrorCnt++;
+        mqtt_client.subscribe((mqttname + "/parameter/publish_delay").c_str()) || ErrorCnt++; // debug_flg_full_log
 
-        mqtt_client.publish((mqttname + "/parameter/min_publish_time").c_str(), String(min_publish_time).c_str());
-        mqtt_client.subscribe((mqttname + "/parameter/min_publish_time").c_str()); // min_publish_time
+        mqtt_client.publish((mqttname + "/parameter/min_publish_time").c_str(), String(min_publish_time).c_str()) || ErrorCnt++;
+        mqtt_client.subscribe((mqttname + "/parameter/min_publish_time").c_str()) || ErrorCnt++; // min_publish_time
 
+        if ( ErrorCnt > 0) {
+            DEBUG_PRINTLN("Connected to broker but initial publish or subscriptions failed, error count: " + ErrorCnt);
+            mqtt_client.disconnect();
+            DEBUG_PRINTLN("Disconnected from broker.");
+            return false;
+        } else {
+            DEBUG_PRINTLN("Connected to broker, initial publish and subscriptions successful.");
+        }
 #ifdef USELED
         // Send LED_ON state to the LED task
         set_led(LedState::LED_FLASH);
 #endif
     }
-
     return mqtt_client.connected();
 }
 
@@ -170,23 +188,27 @@ void mqtt_loop() {
         if (now - lastReconnectAttempt > RECONNECT_DELAY) { // 5 seconds delay
 
             lastReconnectAttempt = now;
-            if (reconnect()) {
+            if (mqtt_reconnect()) {
                 lastReconnectAttempt = 0;
                 DEBUG_PRINTLN("MQTT Reconnected.");
+                mqtt_client.loop();
             } else {
                 DEBUG_PRINTLN("MQTT Reconnect failed.");
                 // lastReconnectAttempt = 0;
             }
         }
     } else {
-
         mqtt_client.loop();
     }
 }
 
 void mqtt_init() {
     DEBUG_PRINTLN("Connecting MQTT ...");
-    if (reconnect()) {
+
+        // Initialize the mutex
+        mqttMutex = xSemaphoreCreateMutex();
+
+    if (mqtt_reconnect()) {
         DEBUG_PRINTLN("MQTT Connected.");
         // Create the task to call publishStates() every min_publish_time seconds
         xTaskCreate(publishStatesTask, "Publish States Task", 2048, NULL, 0, NULL);

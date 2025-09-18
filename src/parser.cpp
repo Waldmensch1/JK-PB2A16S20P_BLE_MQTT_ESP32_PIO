@@ -133,12 +133,14 @@ void publishIfChanged(T &currentValue, T newValue, const String &topic, int deci
                 DEBUG_PRINTLN(newValue);
         }
         String valueStr = (decimals >= 0) ? String(newValue, decimals) : String(newValue);
-        mqtt_client.publish(topic.c_str(), valueStr.c_str());
+        if (xSemaphoreTake(mqttMutex, portMAX_DELAY) == pdTRUE) {
+            mqtt_client.publish(topic.c_str(), valueStr.c_str());
+            xSemaphoreGive(mqttMutex);
+        }
         currentValue = newValue;
         lastPublishTimes[topic] = currentTime; // Update the last publish time for the topic
     }
 }
-
 #ifdef USE_INFLUXDB
 template <typename T>
 void publishIfChangedInflux(T &currentValue, T newValue, const String &topic, int decimals) {
@@ -505,8 +507,12 @@ void readCellDataRecord(void *message, const char *devicename) {
     publishIfChanged(cell_avg_voltage[MQTT], fl_value, str_base_topic + "/data/cells/voltage/cell_avg_voltage", 3);
 
     // Read cell voltage difference
-    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
+    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) / DIFFV_DIVIDER;
+#if DIFFV_DIVIDER == 1
+    publishIfChanged(cell_diff_voltage[MQTT], fl_value, str_base_topic + "/data/cells/voltage/cell_diff_voltage", 0);
+#else
     publishIfChanged(cell_diff_voltage[MQTT], fl_value, str_base_topic + "/data/cells/voltage/cell_diff_voltage", 3);
+#endif
 
     // high_voltage_cell
     byte byte_value = receivedBytes_cell[index++];

@@ -1,11 +1,10 @@
-
-#ifndef RS485_HANDLER_H
-#define RS485_HANDLER_H
-
 #include "config.h"
 
 #ifdef USE_RS485
+#ifndef RS485_HANDLER_H
+#define RS485_HANDLER_H
 #include "mqtt_client.h"
+#include "macros.h"
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <PubSubClient.h>

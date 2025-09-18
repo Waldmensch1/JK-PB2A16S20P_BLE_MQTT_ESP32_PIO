@@ -38,8 +38,13 @@ Here is a list of currently evaluated BMS models along with the tested hard- and
 | ------------- | ------- | ------ | ------ |
 | JK-PB2A16S20P | 15A     | 15.37  | supported |
 | JK-PB2A16S15P | 15A     | 15.38  | supported |
+| JK-PB2A16SxxP | 15H     | 15.41  | supported (*) |
+| JK-PB2A16SxxP | 19      | *      | *not* supported (**) |
 
-If you are running a different BMS model, especially with different hardware (rev. 14) or different firmware, feel free to test the project and provide feedback by raising an issue.  
+(*) some data is missing, like heater settings  
+(**) no data received at all
+
+Hardware rev. 14 of the JK inverter BMS will most probably also work with a recent firmware installed.  
 **Note:** The most promising precondition to successfully use this project is probably by running a **recent firmware** on your BMS. You may check [Andy's homepage](https://off-grid-garage.com/battery-management-systems-bms/) for firmware updates for the JK inverter BMS series.
 
 ## Contributing

@@ -807,7 +807,7 @@ void readCellDataRecord(void *message, const char *devicename) {
     if (debug_flg) {
         DEBUG_PRINT("time_emergency: ");
         DEBUG_PRINTLN(uint16_t_value);
-        publishIfChanged(time_emergency[MQTT], uint16_t_value, str_base_topic + "/data/sus/time_emergency", 3);
+        publishIfChanged(time_emergency[MQTT], uint16_t_value, str_base_topic + "/data/sus/time_emergency");
     }
 
     // index 220
@@ -844,7 +844,7 @@ void readCellDataRecord(void *message, const char *devicename) {
     if (debug_flg) {
         DEBUG_PRINT("bat_vol_correct: ");
         DEBUG_PRINTLN(fl_value);
-        publishIfChanged(bat_vol_correct[MQTT], fl_value, str_base_topic + "/data/sus/bat_vol_correct");
+        publishIfChanged(bat_vol_correct[MQTT], fl_value, str_base_topic + "/data/sus/bat_vol_correct", 3);
     }
 
     // index 230

@@ -798,18 +798,19 @@ void readCellDataRecord(void *message, const char *devicename) {
     }
 
     // index 216
-    index += 1; // skip 1 reserved byte
-
-    // index 217
+    index += 2; // skip 2 reserved byte; see MODBUS V1.1; at adress 210 (216 for BLE) 
+    // from now on the suspect values are not so suspect anymore :-)
+    
+    // index 218
     // suspect: time_emergency
     uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
     if (debug_flg) {
         DEBUG_PRINT("time_emergency: ");
         DEBUG_PRINTLN(uint16_t_value);
-        publishIfChanged(time_emergency[MQTT], uint16_t_value, str_base_topic + "/data/sus/time_emergency");
+        publishIfChanged(time_emergency[MQTT], uint16_t_value, str_base_topic + "/data/sus/time_emergency", 3);
     }
 
-    // index 219
+    // index 220
     // suspect:  Discharge current correction factor
     uint16_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8);
     if (debug_flg) {
@@ -818,7 +819,7 @@ void readCellDataRecord(void *message, const char *devicename) {
         publishIfChanged(bat_dis_cur_correct[MQTT], uint16_t_value, str_base_topic + "/data/sus/bat_dis_cur_correct");
     }
 
-    // index 221
+    // index 222
     // suspect: Charging current sensor voltage
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
     if (debug_flg) {
@@ -827,7 +828,7 @@ void readCellDataRecord(void *message, const char *devicename) {
         publishIfChanged(vol_charg_cur[MQTT], fl_value, str_base_topic + "/data/sus/vol_charg_cur");
     }
 
-    // index 223
+    // index 224
     // suspect: Discharge current sensor voltage.
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
     if (debug_flg) {
@@ -836,19 +837,20 @@ void readCellDataRecord(void *message, const char *devicename) {
         publishIfChanged(vol_discharg_cur[MQTT], fl_value, str_base_topic + "/data/sus/vol_discharg_cur");
     }
 
-    // index 225
-    // suspect: Battery voltage correction factor
-    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24) * 0.001;
+    // index 226
+    // suspect: Battery voltage correction factor; this defined as IEEE754 FLOAT format in MODBUS V1.1! see page 12 MODBUS adress 220 (BLE 226)
+    uint32_t_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8 | receivedBytes_cell[index++] << 16 | receivedBytes_cell[index++] << 24);
+    memcpy(&fl_value, &uint32_t_value, 4);
     if (debug_flg) {
         DEBUG_PRINT("bat_vol_correct: ");
         DEBUG_PRINTLN(fl_value);
         publishIfChanged(bat_vol_correct[MQTT], fl_value, str_base_topic + "/data/sus/bat_vol_correct");
     }
 
-    // index 229
+    // index 230
     index += 4; // skip 4 reserved bytes
 
-    // index 233
+    // index 234
     // suspect: Battery voltage
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.01;
     if (debug_flg) {
@@ -857,7 +859,7 @@ void readCellDataRecord(void *message, const char *devicename) {
         publishIfChanged(bat_vol[MQTT], fl_value, str_base_topic + "/data/sus/bat_vol");
     }
 
-    // index 235
+    // index 236
     // suspect: Heating current
     fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
     if (debug_flg) {
@@ -866,9 +868,9 @@ void readCellDataRecord(void *message, const char *devicename) {
         publishIfChanged(heat_current[MQTT], fl_value, str_base_topic + "/data/sus/heat_current");
     }
 
-    // index 237
+    // index 238
     //  skip 7 sus bytes
-    index += 8;
+    index += 7;
 
     // index 245
     byte_value = receivedBytes_cell[index++];
@@ -1236,6 +1238,24 @@ void readConfigDataRecord(void *message, const char *devicename) {
     // DEBUG_PRINTLN(uint32_t_value);
     str_topic = str_base_topic + "/config/tim_pro_discharge";
     str_value = String(uint32_t_value);
+    mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+
+    index = 284
+    // two new values for heating start and stop temperature tested with firmware V15.41 on hardware 15H
+    // TMPHeatingStart
+    uint8_t_value = data[index++]
+    // DEBUG_PRINT(str_base_topic + "/config/tmp_heating_start: ");
+    // DEBUG_PRINTLN(uint8_t_value);
+    str_topic = str_base_topic + "/config/tmp_heating_start";
+    str_value = String(uint8_t_value);
+    mqtt_client.publish(str_topic.c_str(), str_value.c_str());
+
+    // TMPHeatingStop
+    uint8_t_value = data[index++]
+    // DEBUG_PRINT(str_base_topic + "/config/tmp_heating_stop: ");
+    // DEBUG_PRINTLN(uint8_t_value);
+    str_topic = str_base_topic + "/config/tmp_heating_stop";
+    str_value = String(uint8_t_value);
     mqtt_client.publish(str_topic.c_str(), str_value.c_str());
 
     DEBUG_PRINT("Index <---------- ");

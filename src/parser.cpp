@@ -1240,10 +1240,10 @@ void readConfigDataRecord(void *message, const char *devicename) {
     str_value = String(uint32_t_value);
     mqtt_client.publish(str_topic.c_str(), str_value.c_str());
 
-    index = 284
+    index = 284;
     // two new values for heating start and stop temperature tested with firmware V15.41 on hardware 15H
     // TMPHeatingStart
-    uint8_t_value = data[index++]
+    uint8_t_value = data[index++];
     // DEBUG_PRINT(str_base_topic + "/config/tmp_heating_start: ");
     // DEBUG_PRINTLN(uint8_t_value);
     str_topic = str_base_topic + "/config/tmp_heating_start";
@@ -1251,7 +1251,7 @@ void readConfigDataRecord(void *message, const char *devicename) {
     mqtt_client.publish(str_topic.c_str(), str_value.c_str());
 
     // TMPHeatingStop
-    uint8_t_value = data[index++]
+    uint8_t_value = data[index++];
     // DEBUG_PRINT(str_base_topic + "/config/tmp_heating_stop: ");
     // DEBUG_PRINTLN(uint8_t_value);
     str_topic = str_base_topic + "/config/tmp_heating_stop";

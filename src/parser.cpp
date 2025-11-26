@@ -507,10 +507,11 @@ void readCellDataRecord(void *message, const char *devicename) {
     publishIfChanged(cell_avg_voltage[MQTT], fl_value, str_base_topic + "/data/cells/voltage/cell_avg_voltage", 3);
 
     // Read cell voltage difference
-    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) / DIFFV_DIVIDER;
 #if DIFFV_DIVIDER == 1
+    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8)
     publishIfChanged(cell_diff_voltage[MQTT], fl_value, str_base_topic + "/data/cells/voltage/cell_diff_voltage", 0);
 #else
+    fl_value = (receivedBytes_cell[index++] | receivedBytes_cell[index++] << 8) * 0.001;
     publishIfChanged(cell_diff_voltage[MQTT], fl_value, str_base_topic + "/data/cells/voltage/cell_diff_voltage", 3);
 #endif
 
